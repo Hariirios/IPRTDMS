@@ -1,19 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Eye, Users, Calendar, Search } from 'lucide-react';
+import { Plus, Eye, Users, Calendar, Search, Trash2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { toast } from 'sonner';
-
-interface Student {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  enrollmentDate: string;
-  status: 'Active' | 'Completed' | 'Dropped';
-}
+import { studentStore, Student } from '../../lib/studentStore';
 
 interface Project {
   id: string;
@@ -45,11 +37,16 @@ export function MemberProjects() {
   const [searchTerm, setSearchTerm] = useState('');
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
   
-  // Mock existing students list
-  const [existingStudents] = useState<Student[]>([
-    { id: '1', fullName: 'Ahmed Hassan', email: 'ahmed@example.com', phone: '123-456-7890', enrollmentDate: '2024-01-10', status: 'Active' },
-    { id: '2', fullName: 'Fatima Ali', email: 'fatima@example.com', phone: '123-456-7891', enrollmentDate: '2024-01-12', status: 'Active' }
-  ]);
+  // Get students from shared store
+  const [existingStudents, setExistingStudents] = useState<Student[]>([]);
+
+  useEffect(() => {
+    loadStudents();
+  }, []);
+
+  const loadStudents = () => {
+    setExistingStudents(studentStore.getAll());
+  };
 
   const [newStudentForm, setNewStudentForm] = useState({
     fullName: '',
@@ -73,6 +70,9 @@ export function MemberProjects() {
       return;
     }
 
+    // Add project to student record
+    studentStore.addProjectToStudent(student.id, selectedProject.id, selectedProject.name);
+
     setProjects(projects.map(p =>
       p.id === selectedProject.id
         ? { ...p, students: [...p.students, student] }
@@ -82,16 +82,24 @@ export function MemberProjects() {
     toast.success('Student added to project successfully!');
     setSelectedExistingStudent('');
     setIsAddStudentModalOpen(false);
+    loadStudents();
   };
 
   const handleAddNewStudent = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProject) return;
 
-    const newStudent: Student = {
+    // Add student to shared store
+    const newStudent = studentStore.add({
       ...newStudentForm,
-      id: Date.now().toString()
-    };
+      addedBy: 'member',
+      addedByEmail: 'member@iprt.edu',
+      projects: [{
+        projectId: selectedProject.id,
+        projectName: selectedProject.name,
+        assignedDate: new Date().toISOString().split('T')[0]
+      }]
+    });
 
     setProjects(projects.map(p =>
       p.id === selectedProject.id
@@ -102,6 +110,25 @@ export function MemberProjects() {
     toast.success('New student added to project successfully!');
     setNewStudentForm({ fullName: '', email: '', phone: '', enrollmentDate: '', status: 'Active' });
     setIsAddStudentModalOpen(false);
+    loadStudents();
+  };
+
+  const handleRemoveStudentFromProject = (studentId: string) => {
+    if (!selectedProject) return;
+    
+    if (confirm('Remove this student from the project?')) {
+      // Remove project from student record
+      studentStore.removeProjectFromStudent(studentId, selectedProject.id);
+      
+      setProjects(projects.map(p =>
+        p.id === selectedProject.id
+          ? { ...p, students: p.students.filter(s => s.id !== studentId) }
+          : p
+      ));
+      
+      toast.success('Student removed from project');
+      loadStudents();
+    }
   };
 
   const filteredProjects = projects.filter(project =>
@@ -225,14 +252,24 @@ export function MemberProjects() {
               <div className="border-b border-gray-200 dark:border-gray-700">
                 <nav className="-mb-px flex gap-6">
                   <button
-                    onClick={() => setSelectedExistingStudent('')}
+                    onClick={() => {
+                      setSelectedExistingStudent('');
+                      document.getElementById('existing-tab')?.classList.remove('hidden');
+                      document.getElementById('new-tab')?.classList.add('hidden');
+                    }}
                     className="py-2 px-1 border-b-2 border-[#3B0764] text-[#3B0764] font-medium"
+                    id="existing-btn"
                   >
                     Select Existing Student
                   </button>
                   <button
-                    onClick={() => setSelectedExistingStudent('')}
+                    onClick={() => {
+                      setSelectedExistingStudent('');
+                      document.getElementById('existing-tab')?.classList.add('hidden');
+                      document.getElementById('new-tab')?.classList.remove('hidden');
+                    }}
                     className="py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium"
+                    id="new-btn"
                   >
                     Add New Student
                   </button>
@@ -241,7 +278,7 @@ export function MemberProjects() {
             </div>
 
             {/* Select Existing Student */}
-            <div className="space-y-4">
+            <div className="space-y-4" id="existing-tab">
               <div>
                 <Label>Search Existing Students</Label>
                 <div className="relative mt-1">
@@ -294,7 +331,7 @@ export function MemberProjects() {
             </div>
 
             {/* Add New Student Form */}
-            <div className="hidden">
+            <div className="hidden space-y-4" id="new-tab">
               <form onSubmit={handleAddNewStudent} className="space-y-4">
                 <div>
                   <Label htmlFor="fullName">Full Name *</Label>
@@ -390,9 +427,19 @@ export function MemberProjects() {
                         <p className="text-sm text-gray-600 dark:text-gray-400">{student.phone}</p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">Enrolled: {student.enrollmentDate}</p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(student.status)}`}>
-                        {student.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(student.status)}`}>
+                          {student.status}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRemoveStudentFromProject(student.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </motion.div>
                 ))}

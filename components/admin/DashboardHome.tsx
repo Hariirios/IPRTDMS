@@ -117,11 +117,11 @@ export function DashboardHome() {
           </button>
           <button className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
             <ClipboardCheck className="h-6 w-6 text-green-600 dark:text-green-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-900 dark:text-white">Mark Attendance</p>
+            <p className="text-sm text-gray-900 dark:text-white">View Attendance</p>
           </button>
           <button className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
             <FileText className="h-6 w-6 text-orange-600 dark:text-orange-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-900 dark:text-white">New Requisition</p>
+            <p className="text-sm text-gray-900 dark:text-white">Review Requisitions</p>
           </button>
         </div>
       </motion.div>

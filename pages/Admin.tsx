@@ -9,6 +9,8 @@ import { RequisitionsAdmin } from '../components/admin/RequisitionsAdmin';
 import { TeamMembersAdmin } from '../components/admin/TeamMembersAdmin';
 import { MemberProjects } from '../components/member/MemberProjects';
 import { MemberAttendance } from '../components/member/MemberAttendance';
+import { MemberStudents } from '../components/member/MemberStudents';
+import { MemberDashboardHome } from '../components/member/MemberDashboardHome';
 import { Lock, Eye, EyeOff, LogOut, Moon, Sun } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -552,18 +554,33 @@ export default function Admin() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="projects" className="space-y-6">
+        <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="bg-white dark:bg-gray-800 p-1 rounded-lg shadow">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="projects">My Projects</TabsTrigger>
+            <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="requisitions">Requisitions</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dashboard">
+            <MemberDashboardHome />
+          </TabsContent>
 
           <TabsContent value="projects">
             <MemberProjects />
           </TabsContent>
 
+          <TabsContent value="students">
+            <MemberStudents />
+          </TabsContent>
+
           <TabsContent value="attendance">
             <MemberAttendance />
+          </TabsContent>
+
+          <TabsContent value="requisitions">
+            <RequisitionsAdmin userRole="member" />
           </TabsContent>
         </Tabs>
       </div>

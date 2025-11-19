@@ -1,66 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Wrench, Server, Microscope, Monitor } from 'lucide-react';
+import { Wrench, Server, Microscope, Monitor, Mail, Phone, Building, Briefcase } from 'lucide-react';
+import { teamStore } from '../lib/teamStore';
 
 export default function Technicians() {
-  const technicians = [
-    {
-      name: "Mr. Robert Taylor",
-      department: "IT Support",
-      skills: "Network, Hardware, Software",
-      initials: "RT",
-      gradient: "from-purple-600 to-pink-600"
-    },
-    {
-      name: "Ms. Maria Gonzalez",
-      department: "Lab Equipment",
-      skills: "Maintenance, Calibration",
-      initials: "MG",
-      gradient: "from-pink-600 to-rose-600"
-    },
-    {
-      name: "Mr. Ahmed Hassan",
-      department: "Technical Support",
-      skills: "AV Systems, Equipment Setup",
-      initials: "AH",
-      gradient: "from-blue-600 to-purple-600"
-    },
-    {
-      name: "Ms. Jennifer Lee",
-      department: "Research Support",
-      skills: "Data Management, Tools",
-      initials: "JL",
-      gradient: "from-green-600 to-teal-600"
-    },
-    {
-      name: "Mr. David Chen",
-      department: "Network Admin",
-      skills: "Infrastructure, Security",
-      initials: "DC",
-      gradient: "from-indigo-600 to-blue-600"
-    },
-    {
-      name: "Ms. Lisa Brown",
-      department: "Lab Technician",
-      skills: "Equipment, Safety",
-      initials: "LB",
-      gradient: "from-orange-600 to-red-600"
-    },
-    {
-      name: "Mr. Omar Khalil",
-      department: "AV Specialist",
-      skills: "Multimedia, Recording",
-      initials: "OK",
-      gradient: "from-cyan-600 to-blue-600"
-    },
-    {
-      name: "Ms. Anna Kowalski",
-      department: "IT Support",
-      skills: "Help Desk, Training",
-      initials: "AK",
-      gradient: "from-teal-600 to-green-600"
-    }
-  ];
+  const [technicians, setTechnicians] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Load technicians from store
+    const members = teamStore.getByType('Technician');
+    setTechnicians(members);
+  }, []);
+
+  const getGradient = (index: number) => {
+    const gradients = [
+      "from-purple-600 to-pink-600",
+      "from-pink-600 to-rose-600",
+      "from-blue-600 to-purple-600",
+      "from-cyan-600 to-blue-600",
+      "from-indigo-600 to-purple-600",
+      "from-teal-600 to-green-600"
+    ];
+    return gradients[index % gradients.length];
+  };
 
   const services = [
     {
@@ -109,41 +71,68 @@ export default function Technicians() {
       {/* Technicians Grid */}
       <section className="py-20 bg-white dark:bg-gray-950">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-            {technicians.map((technician, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all"
-              >
-                {/* Avatar */}
-                <div className="flex justify-center mb-4">
-                  <div className={`w-24 h-24 bg-gradient-to-br ${technician.gradient} rounded-full flex items-center justify-center shadow-lg`}>
-                    <span className="text-white text-2xl font-bold">
-                      {technician.initials}
-                    </span>
+          {technicians.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                No technicians added yet. Please check back later.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+              {technicians.map((technician, index) => (
+                <motion.div
+                  key={technician.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  whileHover={{ y: -8 }}
+                  className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all"
+                >
+                  {/* Avatar */}
+                  <div className="flex justify-center mb-4">
+                    {technician.image ? (
+                      <img
+                        src={technician.image}
+                        alt={technician.name}
+                        className="w-24 h-24 rounded-full object-cover shadow-lg"
+                      />
+                    ) : (
+                      <div className={`w-24 h-24 bg-gradient-to-br ${getGradient(index)} rounded-full flex items-center justify-center shadow-lg`}>
+                        <span className="text-white text-2xl font-bold">
+                          {technician.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </div>
 
-                {/* Info */}
-                <div className="text-center space-y-2">
-                  <h3 className="text-gray-900 dark:text-white font-semibold text-lg">
-                    {technician.name}
-                  </h3>
-                  <p className="text-[#3B0764] dark:text-[#8B5CF6] font-medium">
-                    {technician.department}
-                  </p>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">
-                    {technician.skills}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                  {/* Info */}
+                  <div className="text-center space-y-2">
+                    <h3 className="text-gray-900 dark:text-white font-semibold text-lg">
+                      {technician.name}
+                    </h3>
+                    <p className="text-[#3B0764] dark:text-[#8B5CF6] font-medium">
+                      {technician.role}
+                    </p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm flex items-center justify-center gap-1">
+                      <Building className="h-4 w-4" />
+                      {technician.department}
+                    </p>
+                    <div className="pt-2 space-y-1">
+                      <p className="text-gray-600 dark:text-gray-400 text-xs flex items-center justify-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        {technician.email}
+                      </p>
+                      <p className="text-gray-600 dark:text-gray-400 text-xs flex items-center justify-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {technician.phone}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

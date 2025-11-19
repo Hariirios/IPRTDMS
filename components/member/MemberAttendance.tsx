@@ -17,7 +17,8 @@ interface Student {
 interface AttendanceRecord {
   studentId: string;
   date: string;
-  status: 'Present' | 'Absent';
+  status: 'Present' | 'Absent' | 'Absent with Reason';
+  comment?: string;
 }
 
 interface Project {
@@ -47,7 +48,8 @@ export function MemberAttendance() {
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
-  const [attendanceStatus, setAttendanceStatus] = useState<{ [key: string]: 'Present' | 'Absent' }>({});
+  const [attendanceStatus, setAttendanceStatus] = useState<{ [key: string]: 'Present' | 'Absent' | 'Absent with Reason' }>({});
+  const [attendanceComments, setAttendanceComments] = useState<{ [key: string]: string }>({});
 
   const handleViewStudent = (student: Student) => {
     setSelectedStudent(student);
@@ -72,7 +74,8 @@ export function MemberAttendance() {
     const newRecords: AttendanceRecord[] = Object.entries(attendanceStatus).map(([studentId, status]) => ({
       studentId,
       date: attendanceDate,
-      status
+      status,
+      comment: attendanceComments[studentId] || ''
     }));
 
     setProjects(projects.map(p =>
@@ -84,6 +87,7 @@ export function MemberAttendance() {
     toast.success('Attendance recorded successfully!');
     setIsAttendanceModalOpen(false);
     setSelectedProject(null);
+    setAttendanceComments({});
   };
 
   const getAttendanceStats = (project: Project, studentId: string) => {
@@ -241,24 +245,36 @@ export function MemberAttendance() {
                     p.attendanceRecords
                       .filter(r => r.studentId === selectedStudent.id)
                       .map(record => (
-                        <div key={`${record.date}-${record.studentId}`} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                            <span className="text-sm text-gray-900 dark:text-white">{record.date}</span>
+                        <div key={`${record.date}-${record.studentId}`} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                              <span className="text-sm text-gray-900 dark:text-white">{record.date}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {record.status === 'Present' ? (
+                                <>
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                  <span className="text-sm font-semibold text-green-600">Present</span>
+                                </>
+                              ) : record.status === 'Absent with Reason' ? (
+                                <>
+                                  <XCircle className="h-4 w-4 text-yellow-600" />
+                                  <span className="text-sm font-semibold text-yellow-600">Absent (Reason)</span>
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle className="h-4 w-4 text-red-600" />
+                                  <span className="text-sm font-semibold text-red-600">Absent</span>
+                                </>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            {record.status === 'Present' ? (
-                              <>
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                                <span className="text-sm font-semibold text-green-600">Present</span>
-                              </>
-                            ) : (
-                              <>
-                                <XCircle className="h-4 w-4 text-red-600" />
-                                <span className="text-sm font-semibold text-red-600">Absent</span>
-                              </>
-                            )}
-                          </div>
+                          {record.comment && (
+                            <div className="pl-6 text-sm text-gray-600 dark:text-gray-400 italic">
+                              Reason: {record.comment}
+                            </div>
+                          )}
                         </div>
                       ))
                   )}
@@ -305,40 +321,72 @@ export function MemberAttendance() {
               />
             </div>
 
-            <div className="space-y-3 mb-6">
+            <div className="space-y-4 mb-6">
               {selectedProject.students.map((student) => (
                 <div
                   key={student.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                  className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-3"
                 >
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">{student.fullName}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{student.email}</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">{student.fullName}</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{student.email}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setAttendanceStatus({ ...attendanceStatus, [student.id]: 'Present' });
+                          setAttendanceComments({ ...attendanceComments, [student.id]: '' });
+                        }}
+                        className={attendanceStatus[student.id] === 'Present' 
+                          ? 'bg-green-600 hover:bg-green-700 text-white' 
+                          : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                        }
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Present
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setAttendanceStatus({ ...attendanceStatus, [student.id]: 'Absent' });
+                          setAttendanceComments({ ...attendanceComments, [student.id]: '' });
+                        }}
+                        className={attendanceStatus[student.id] === 'Absent' 
+                          ? 'bg-red-600 hover:bg-red-700 text-white' 
+                          : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                        }
+                      >
+                        <XCircle className="h-4 w-4 mr-1" />
+                        Absent
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => setAttendanceStatus({ ...attendanceStatus, [student.id]: 'Absent with Reason' })}
+                        className={attendanceStatus[student.id] === 'Absent with Reason' 
+                          ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
+                          : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                        }
+                      >
+                        <XCircle className="h-4 w-4 mr-1" />
+                        Absent (Reason)
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => setAttendanceStatus({ ...attendanceStatus, [student.id]: 'Present' })}
-                      className={attendanceStatus[student.id] === 'Present' 
-                        ? 'bg-green-600 hover:bg-green-700' 
-                        : 'bg-gray-300 hover:bg-gray-400'
-                      }
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Present
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setAttendanceStatus({ ...attendanceStatus, [student.id]: 'Absent' })}
-                      className={attendanceStatus[student.id] === 'Absent' 
-                        ? 'bg-red-600 hover:bg-red-700' 
-                        : 'bg-gray-300 hover:bg-gray-400'
-                      }
-                    >
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Absent
-                    </Button>
-                  </div>
+                  
+                  {/* Comment field for Absent with Reason */}
+                  {attendanceStatus[student.id] === 'Absent with Reason' && (
+                    <div className="mt-2">
+                      <textarea
+                        placeholder="Enter reason for absence..."
+                        value={attendanceComments[student.id] || ''}
+                        onChange={(e) => setAttendanceComments({ ...attendanceComments, [student.id]: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                        rows={2}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

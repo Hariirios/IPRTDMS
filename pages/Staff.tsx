@@ -1,66 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Mail, Phone } from 'lucide-react';
+import { Mail, Phone, Briefcase, Building } from 'lucide-react';
+import { teamStore } from '../lib/teamStore';
 
 export default function Staff() {
-  const staffMembers = [
-    {
-      name: "Dr. Sarah Johnson",
-      title: "Director",
-      expertise: "Research Management",
-      initials: "SJ",
-      gradient: "from-blue-600 to-purple-600"
-    },
-    {
-      name: "Prof. Michael Chen",
-      title: "Head of Research",
-      expertise: "Data Science",
-      initials: "MC",
-      gradient: "from-purple-600 to-pink-600"
-    },
-    {
-      name: "Dr. Emily Rodriguez",
-      title: "Training Coordinator",
-      expertise: "Curriculum Development",
-      initials: "ER",
-      gradient: "from-green-600 to-blue-600"
-    },
-    {
-      name: "Mr. David Kim",
-      title: "Operations Manager",
-      expertise: "Project Management",
-      initials: "DK",
-      gradient: "from-orange-600 to-red-600"
-    },
-    {
-      name: "Ms. Rachel Adams",
-      title: "Finance Manager",
-      expertise: "Budget Planning",
-      initials: "RA",
-      gradient: "from-teal-600 to-green-600"
-    },
-    {
-      name: "Mr. Thomas Brown",
-      title: "HR Manager",
-      expertise: "Staff Development",
-      initials: "TB",
-      gradient: "from-indigo-600 to-purple-600"
-    },
-    {
-      name: "Dr. Linda Martinez",
-      title: "Quality Assurance",
-      expertise: "Standards Compliance",
-      initials: "LM",
-      gradient: "from-pink-600 to-rose-600"
-    },
-    {
-      name: "Mr. Kevin White",
-      title: "IT Manager",
-      expertise: "Systems Administration",
-      initials: "KW",
-      gradient: "from-cyan-600 to-blue-600"
-    }
-  ];
+  const [staffMembers, setStaffMembers] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Load staff members from store
+    const members = teamStore.getByType('Staff');
+    setStaffMembers(members);
+  }, []);
+
+  const getGradient = (index: number) => {
+    const gradients = [
+      "from-blue-600 to-purple-600",
+      "from-purple-600 to-pink-600",
+      "from-green-600 to-blue-600",
+      "from-orange-600 to-red-600",
+      "from-teal-600 to-green-600",
+      "from-indigo-600 to-purple-600"
+    ];
+    return gradients[index % gradients.length];
+  };
 
   return (
     <div className="min-h-screen pt-20">
@@ -86,41 +48,68 @@ export default function Staff() {
       {/* Staff Grid */}
       <section className="py-20 bg-white dark:bg-gray-950">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-            {staffMembers.map((member, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all"
-              >
-                {/* Avatar */}
-                <div className="flex justify-center mb-4">
-                  <div className={`w-24 h-24 bg-gradient-to-br ${member.gradient} rounded-full flex items-center justify-center shadow-lg`}>
-                    <span className="text-white text-2xl font-bold">
-                      {member.initials}
-                    </span>
+          {staffMembers.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                No staff members added yet. Please check back later.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+              {staffMembers.map((member, index) => (
+                <motion.div
+                  key={member.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  whileHover={{ y: -8 }}
+                  className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all"
+                >
+                  {/* Avatar */}
+                  <div className="flex justify-center mb-4">
+                    {member.image ? (
+                      <img
+                        src={member.image}
+                        alt={member.name}
+                        className="w-24 h-24 rounded-full object-cover shadow-lg"
+                      />
+                    ) : (
+                      <div className={`w-24 h-24 bg-gradient-to-br ${getGradient(index)} rounded-full flex items-center justify-center shadow-lg`}>
+                        <span className="text-white text-2xl font-bold">
+                          {member.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </div>
 
-                {/* Info */}
-                <div className="text-center space-y-2">
-                  <h3 className="text-gray-900 dark:text-white font-semibold text-lg">
-                    {member.name}
-                  </h3>
-                  <p className="text-[#3B0764] dark:text-[#8B5CF6] font-medium">
-                    {member.title}
-                  </p>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">
-                    {member.expertise}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                  {/* Info */}
+                  <div className="text-center space-y-2">
+                    <h3 className="text-gray-900 dark:text-white font-semibold text-lg">
+                      {member.name}
+                    </h3>
+                    <p className="text-[#3B0764] dark:text-[#8B5CF6] font-medium">
+                      {member.role}
+                    </p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm flex items-center justify-center gap-1">
+                      <Building className="h-4 w-4" />
+                      {member.department}
+                    </p>
+                    <div className="pt-2 space-y-1">
+                      <p className="text-gray-600 dark:text-gray-400 text-xs flex items-center justify-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        {member.email}
+                      </p>
+                      <p className="text-gray-600 dark:text-gray-400 text-xs flex items-center justify-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {member.phone}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
