@@ -54,20 +54,20 @@ export default function Contact() {
     {
       icon: Phone,
       label: t.contact.phone,
-      value: '+252 63 8449327',
-      link: 'tel:+252638449327',
+      value: '+25263 4742370',
+      link: 'tel:+252634742370',
     },
     {
       icon: Mail,
       label: t.contact.email,
-      value: 'sirta.maanka@gmail.com',
-      link: 'mailto:sirta.maanka@gmail.com',
+      value: 'mohamoud@iprt.info',
+      link: 'mohamoud@iprt.info',
     },
     {
       icon: MapPin,
       label: t.contact.location,
-      value: 'Jigjiga Yar Area, Hargeisa, Somaliland',
-      link: 'https://maps.google.com/?q=Jigjiga+Yar+Hargeisa',
+      value: 'Shacabka Yar Area, Hargeisa, Somaliland',
+      link: 'https://www.google.com/maps/search/Shacab-Rd+Hargiesa',
     },
   ];
 

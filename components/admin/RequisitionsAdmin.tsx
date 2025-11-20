@@ -5,6 +5,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { toast } from 'sonner';
+import { notificationStore } from '../../lib/notificationStore';
 
 interface Requisition {
   id: string;
@@ -57,7 +58,21 @@ export function RequisitionsAdmin({ userRole = 'admin' }: RequisitionsAdminProps
     };
     
     setRequisitions([newRequisition, ...requisitions]);
-    toast.success('Requisition submitted successfully!');
+    
+    // Create notification for admin if submitted by member
+    if (userRole === 'member') {
+      notificationStore.add({
+        type: 'requisition',
+        title: 'New Requisition Request',
+        message: `${newRequisition.submittedBy} submitted a requisition for ${newRequisition.title}`,
+        relatedId: newRequisition.id,
+        createdBy: newRequisition.submittedBy
+      });
+      toast.success('🔔 Requisition submitted! Admin has been notified.');
+    } else {
+      toast.success('Requisition submitted successfully!');
+    }
+    
     handleCloseModal();
   };
 

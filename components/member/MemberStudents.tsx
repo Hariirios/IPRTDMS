@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Edit, Trash2, Search, Eye, FolderOpen } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Eye, FolderOpen, AlertTriangle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { toast } from 'sonner';
 import { studentStore, Student } from '../../lib/studentStore';
+import { deletionRequestStore } from '../../lib/deletionRequestStore';
 
 export function MemberStudents() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [viewingStudent, setViewingStudent] = useState<Student | null>(null);
+  const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
+  const [deletionReason, setDeletionReason] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   
   const [formData, setFormData] = useState({
@@ -66,12 +70,33 @@ export function MemberStudents() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this student? This will remove them from all projects.')) {
-      studentStore.delete(id);
-      loadStudents();
-      toast.success('Student deleted successfully!');
+  const handleDeleteRequest = (student: Student) => {
+    setDeletingStudent(student);
+    setDeletionReason('');
+    setIsDeletionModalOpen(true);
+  };
+
+  const submitDeletionRequest = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!deletingStudent || !deletionReason.trim()) {
+      toast.error('Please provide a reason for deletion');
+      return;
     }
+
+    deletionRequestStore.add({
+      studentId: deletingStudent.id,
+      studentName: deletingStudent.fullName,
+      studentEmail: deletingStudent.email,
+      requestedBy: 'member',
+      requestedByEmail: 'member@iprt.edu', // In real app, get from auth context
+      reason: deletionReason
+    });
+
+    toast.success('🔔 Deletion request submitted! Admin has been notified and will review your request.');
+    setIsDeletionModalOpen(false);
+    setDeletingStudent(null);
+    setDeletionReason('');
   };
 
   const handleView = (student: Student) => {
@@ -184,8 +209,9 @@ export function MemberStudents() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDelete(student.id)}
+                  onClick={() => handleDeleteRequest(student)}
                   className="text-red-600 hover:text-red-700 h-7 w-7 p-0"
+                  title="Request Deletion"
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>
@@ -270,6 +296,75 @@ export function MemberStudents() {
                   {editingStudent ? 'Update Student' : 'Add Student'}
                 </Button>
                 <Button type="button" variant="outline" onClick={handleCloseModal} className="flex-1">
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Deletion Request Modal */}
+      {isDeletionModalOpen && deletingStudent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Request Student Deletion
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Admin approval required
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <p className="text-sm text-gray-600 dark:text-gray-400">Student:</p>
+              <p className="font-semibold text-gray-900 dark:text-white">{deletingStudent.fullName}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{deletingStudent.email}</p>
+            </div>
+
+            <form onSubmit={submitDeletionRequest} className="space-y-4">
+              <div>
+                <Label htmlFor="deletionReason">Reason for Deletion *</Label>
+                <textarea
+                  id="deletionReason"
+                  value={deletionReason}
+                  onChange={(e) => setDeletionReason(e.target.value)}
+                  placeholder="Please explain why this student should be deleted..."
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-h-[100px]"
+                  required
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  This reason will be reviewed by an administrator
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  type="submit" 
+                  className="flex-1 bg-red-600 hover:bg-red-700"
+                >
+                  Submit Request
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsDeletionModalOpen(false);
+                    setDeletingStudent(null);
+                    setDeletionReason('');
+                  }} 
+                  className="flex-1"
+                >
                   Cancel
                 </Button>
               </div>

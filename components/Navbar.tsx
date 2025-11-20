@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Moon, Sun, Menu, X, ChevronDown } from 'lucide-react';
+import { Moon, Sun, Menu, X, ChevronDown, Globe } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Button } from './ui/button';
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
   const location = useLocation();
+
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'so', name: 'Somali', flag: '🇸🇴' },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦' }
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +32,7 @@ export function Navbar() {
   useEffect(() => {
     const handleClickOutside = () => {
       setOpenDropdown(null);
+      setIsLangMenuOpen(false);
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
@@ -171,6 +181,55 @@ export function Navbar() {
                 Login
               </Button>
             </Link>
+
+            {/* Language Selector */}
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsLangMenuOpen(!isLangMenuOpen);
+                }}
+                className={!isScrolled ? 'text-white hover:text-white hover:bg-white/10' : ''}
+                title="Change Language"
+              >
+                <Globe className="h-5 w-5" />
+              </Button>
+
+              <AnimatePresence>
+                {isLangMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+                  >
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          setLanguage(lang.code as 'en' | 'so' | 'ar');
+                          setIsLangMenuOpen(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left hover:bg-[#8B5CF6]/10 dark:hover:bg-gray-700 transition-colors flex items-center gap-3 ${
+                          language === lang.code
+                            ? 'bg-[#8B5CF6]/20 dark:bg-[#3B0764] text-[#3B0764] dark:text-white font-semibold'
+                            : 'text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        <span className="text-2xl">{lang.flag}</span>
+                        <span>{lang.name}</span>
+                        {language === lang.code && (
+                          <span className="ml-auto text-[#3B0764] dark:text-[#8B5CF6]">✓</span>
+                        )}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Theme Toggle */}
             <Button 

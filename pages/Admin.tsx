@@ -7,16 +7,21 @@ import { StudentsAdmin } from '../components/admin/StudentsAdmin';
 import { AttendanceAdmin } from '../components/admin/AttendanceAdmin';
 import { RequisitionsAdmin } from '../components/admin/RequisitionsAdmin';
 import { TeamMembersAdmin } from '../components/admin/TeamMembersAdmin';
+import { DeletionRequestsAdmin } from '../components/admin/DeletionRequestsAdmin';
+import { NotificationBell } from '../components/admin/NotificationBell';
+import { Notification } from '../lib/notificationStore';
+import { deletionRequestStore } from '../lib/deletionRequestStore';
 import { MemberProjects } from '../components/member/MemberProjects';
 import { MemberAttendance } from '../components/member/MemberAttendance';
 import { MemberStudents } from '../components/member/MemberStudents';
 import { MemberDashboardHome } from '../components/member/MemberDashboardHome';
-import { Lock, Eye, EyeOff, LogOut, Moon, Sun } from 'lucide-react';
+import { Lock, Eye, EyeOff, LogOut, Moon, Sun, Globe } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { toast } from 'sonner';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -26,7 +31,17 @@ export default function Admin() {
   const [error, setError] = useState('');
   const [userType, setUserType] = useState<'admin' | 'member'>('admin');
   const [authenticatedUserType, setAuthenticatedUserType] = useState<'admin' | 'member'>('admin');
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [pendingDeletionsCount, setPendingDeletionsCount] = useState(0);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
+
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'so', name: 'Somali', flag: '🇸🇴' },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦' }
+  ];
 
   // Hide navbar/footer when on admin page
   useEffect(() => {
@@ -44,6 +59,17 @@ export default function Admin() {
       if (whatsappButton) whatsappButton.style.display = '';
     };
   }, []);
+
+  // Close language menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setIsLangMenuOpen(false);
+    };
+    if (isLangMenuOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [isLangMenuOpen]);
 
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -87,6 +113,52 @@ export default function Admin() {
     setAuthenticatedUserType('admin');
     toast.success('Logged out successfully');
   };
+
+  const handleNotificationClick = (notification: Notification) => {
+    // Redirect to appropriate tab based on notification type
+    switch (notification.type) {
+      case 'deletion_request':
+        setActiveTab('deletions');
+        toast.info('Viewing deletion request');
+        break;
+      case 'requisition':
+        setActiveTab('requisitions');
+        toast.info('Viewing requisition');
+        break;
+      case 'project':
+        setActiveTab('projects');
+        toast.info('Viewing project');
+        break;
+      case 'student':
+        setActiveTab('students');
+        toast.info('Viewing students');
+        break;
+      case 'attendance':
+        setActiveTab('attendance');
+        toast.info('Viewing attendance');
+        break;
+      case 'team':
+        setActiveTab('team');
+        toast.info('Viewing team members');
+        break;
+      default:
+        setActiveTab('dashboard');
+        break;
+    }
+  };
+
+  // Update pending deletions count
+  useEffect(() => {
+    if (authenticatedUserType === 'admin' && isAuthenticated) {
+      const updateCount = () => {
+        setPendingDeletionsCount(deletionRequestStore.getPending().length);
+      };
+      
+      updateCount();
+      const interval = setInterval(updateCount, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [authenticatedUserType, isAuthenticated]);
 
   if (!isAuthenticated) {
     return (
@@ -484,23 +556,83 @@ export default function Admin() {
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">IPRT Admin Dashboard</h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Institute for Practical Research & Training</p>
               </div>
-              <Button onClick={handleLogout} variant="outline">
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
+              <div className="flex items-center gap-3">
+                <NotificationBell onNotificationClick={handleNotificationClick} />
+                
+                {/* Language Selector */}
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsLangMenuOpen(!isLangMenuOpen);
+                    }}
+                    title="Change Language"
+                  >
+                    <Globe className="h-4 w-4" />
+                  </Button>
+
+                  <AnimatePresence>
+                    {isLangMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+                      >
+                        {languages.map((lang) => (
+                          <button
+                            key={lang.code}
+                            onClick={() => {
+                              setLanguage(lang.code as 'en' | 'so' | 'ar');
+                              setIsLangMenuOpen(false);
+                            }}
+                            className={`w-full px-4 py-3 text-left hover:bg-[#8B5CF6]/10 dark:hover:bg-gray-700 transition-colors flex items-center gap-3 ${
+                              language === lang.code
+                                ? 'bg-[#8B5CF6]/20 dark:bg-[#3B0764] text-[#3B0764] dark:text-white font-semibold'
+                                : 'text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            <span className="text-2xl">{lang.flag}</span>
+                            <span>{lang.name}</span>
+                            {language === lang.code && (
+                              <span className="ml-auto text-[#3B0764] dark:text-[#8B5CF6]">✓</span>
+                            )}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <Button onClick={handleLogout} variant="outline">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="container mx-auto px-4 py-8">
-          <Tabs defaultValue="dashboard" className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-white dark:bg-gray-800 p-1 rounded-lg shadow">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="students">Students</TabsTrigger>
               <TabsTrigger value="attendance">Attendance</TabsTrigger>
               <TabsTrigger value="requisitions">Requisitions</TabsTrigger>
+              <TabsTrigger value="deletions" className="relative">
+                Deletion Requests
+                {pendingDeletionsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {pendingDeletionsCount}
+                  </span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="team">Team Members</TabsTrigger>
             </TabsList>
 
@@ -524,6 +656,10 @@ export default function Admin() {
               <RequisitionsAdmin />
             </TabsContent>
 
+            <TabsContent value="deletions">
+              <DeletionRequestsAdmin onRequestProcessed={() => setPendingDeletionsCount(deletionRequestStore.getPending().length)} />
+            </TabsContent>
+
             <TabsContent value="team">
               <TeamMembersAdmin />
             </TabsContent>
@@ -544,10 +680,60 @@ export default function Admin() {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">IPRT Member Dashboard</h1>
               <p className="text-sm text-gray-600 dark:text-gray-400">Institute for Practical Research & Training</p>
             </div>
-            <Button onClick={handleLogout} variant="outline">
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+            <div className="flex items-center gap-3">
+              {/* Language Selector */}
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsLangMenuOpen(!isLangMenuOpen);
+                  }}
+                  title="Change Language"
+                >
+                  <Globe className="h-4 w-4" />
+                </Button>
+
+                <AnimatePresence>
+                  {isLangMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+                    >
+                      {languages.map((lang) => (
+                        <button
+                          key={lang.code}
+                          onClick={() => {
+                            setLanguage(lang.code as 'en' | 'so' | 'ar');
+                            setIsLangMenuOpen(false);
+                          }}
+                          className={`w-full px-4 py-3 text-left hover:bg-[#8B5CF6]/10 dark:hover:bg-gray-700 transition-colors flex items-center gap-3 ${
+                            language === lang.code
+                              ? 'bg-[#8B5CF6]/20 dark:bg-[#3B0764] text-[#3B0764] dark:text-white font-semibold'
+                              : 'text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <span className="text-2xl">{lang.flag}</span>
+                          <span>{lang.name}</span>
+                          {language === lang.code && (
+                            <span className="ml-auto text-[#3B0764] dark:text-[#8B5CF6]">✓</span>
+                          )}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <Button onClick={handleLogout} variant="outline">
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -67,7 +67,17 @@ export function TeamMembersAdmin() {
 
   const handleEdit = (member: TeamMember) => {
     setEditingMember(member);
-    setFormData(member);
+    setFormData({
+      name: member.name,
+      type: member.type,
+      role: member.role,
+      department: member.department,
+      email: member.email,
+      phone: member.phone,
+      image: member.image || '',
+      joinDate: member.joinDate,
+      status: member.status
+    });
     setImagePreview(member.image || '');
     setIsModalOpen(true);
   };
