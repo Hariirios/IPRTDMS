@@ -6,16 +6,29 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { toast } from 'sonner';
 import { teamStore, TeamMember } from '../../lib/teamStore';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 export function TeamMembersAdmin() {
   const [members, setMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     loadMembers();
   }, []);
 
-  const loadMembers = () => {
-    setMembers(teamStore.getAll());
+  const loadMembers = async () => {
+    setLoading(true);
+    try {
+      const data = await teamStore.getAll();
+      setMembers(data);
+    } catch (error) {
+      console.error('Error loading team members:', error);
+      toast.error('Failed to load team members');
+    } finally {
+      setLoading(false);
+    }
   };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -50,19 +63,24 @@ export function TeamMembersAdmin() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingMember) {
-      teamStore.update(editingMember.id, formData);
-      toast.success('Team member updated successfully!');
-    } else {
-      teamStore.add(formData);
-      toast.success('Team member added successfully!');
+    try {
+      if (editingMember) {
+        await teamStore.update(editingMember.id, formData);
+        toast.success('Team member updated successfully! Changes will appear on the website.');
+      } else {
+        await teamStore.add(formData);
+        toast.success('Team member added successfully! They will appear on the website.');
+      }
+      
+      await loadMembers();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error saving team member:', error);
+      toast.error('Failed to save team member. Please try again.');
     }
-    
-    loadMembers();
-    handleCloseModal();
   };
 
   const handleEdit = (member: TeamMember) => {
@@ -88,10 +106,22 @@ export function TeamMembersAdmin() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this team member?')) {
-      teamStore.delete(id);
-      loadMembers();
-      toast.success('Team member deleted successfully!');
+    setMemberToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!memberToDelete) return;
+    
+    try {
+      await teamStore.delete(memberToDelete);
+      await loadMembers();
+      toast.success('Team member deleted successfully! Removed from website.');
+    } catch (error) {
+      console.error('Error deleting team member:', error);
+      toast.error('Failed to delete team member.');
+    } finally {
+      setMemberToDelete(null);
     }
   };
 
@@ -136,31 +166,7 @@ export function TeamMembersAdmin() {
     facilitators: members.filter(m => m.type === 'Facilitator').length
   };
 
-  // Role suggestions based on type
-  const getRoleSuggestions = (type: string) => {
-    switch (type) {
-      case 'Staff':
-        return ['Director', 'Manager', 'Coordinator', 'Administrator', 'Assistant'];
-      case 'Technician':
-        return ['Senior Technician', 'Technician', 'Lab Technician', 'IT Technician'];
-      case 'Facilitator':
-        return ['Lead Facilitator', 'Senior Facilitator', 'Facilitator', 'Assistant Facilitator'];
-      default:
-        return [];
-    }
-  };
-
-  // Department suggestions
-  const departments = [
-    'Administration',
-    'Research',
-    'Training',
-    'IT & Technology',
-    'Human Resources',
-    'Finance',
-    'Operations',
-    'Academic Affairs'
-  ];
+  // Removed role and department suggestions - now using free text input
 
   return (
     <div className="space-y-6">
@@ -228,7 +234,25 @@ export function TeamMembersAdmin() {
 
       {/* Members Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredMembers.length === 0 ? (
+        {loading ? (
+          <>
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-lg animate-pulse">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="flex-1">
+                    <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mb-2"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : filteredMembers.length === 0 ? (
           <div className="col-span-full bg-white dark:bg-gray-800 rounded-xl p-12 shadow-lg text-center">
             <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
             <p className="text-gray-600 dark:text-gray-400">No team members found. Add your first team member!</p>
@@ -377,7 +401,7 @@ export function TeamMembersAdmin() {
                   <select
                     id="type"
                     value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any, role: '' })}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
                   >
@@ -385,38 +409,37 @@ export function TeamMembersAdmin() {
                     <option value="Technician">Technician</option>
                     <option value="Facilitator">Facilitator</option>
                   </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Select the category this member belongs to
+                  </p>
                 </div>
 
                 <div>
                   <Label htmlFor="role">Role *</Label>
-                  <select
+                  <Input
                     id="role"
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="e.g., Director, Manager, Senior Technician"
                     required
-                  >
-                    <option value="">Select Role</option>
-                    {getRoleSuggestions(formData.type).map(role => (
-                      <option key={role} value={role}>{role}</option>
-                    ))}
-                  </select>
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Enter the specific role title
+                  </p>
                 </div>
 
                 <div className="col-span-2">
                   <Label htmlFor="department">Department *</Label>
-                  <select
+                  <Input
                     id="department"
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="e.g., Administration, IT & Technology, Research"
                     required
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map(dept => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                  </select>
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Enter the department name
+                  </p>
                 </div>
 
                 <div>
@@ -559,6 +582,18 @@ export function TeamMembersAdmin() {
           </motion.div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Team Member?"
+        message="Are you sure you want to delete this team member? They will be permanently removed from the website and database. This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

@@ -1,26 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Users, FolderKanban, ClipboardCheck, FileText, TrendingUp, AlertCircle, UserPlus } from 'lucide-react';
+import { memberStore } from '../../lib/memberStore';
+import { projectStore } from '../../lib/projectStore';
+import { studentStore } from '../../lib/studentStore';
 
 export function MemberDashboardHome() {
-  const stats = [
+  const [stats, setStats] = useState([
     {
       title: 'My Projects',
-      value: '1',
+      value: '0',
       icon: FolderKanban,
       gradient: 'from-purple-600 to-pink-600',
       change: 'Active'
     },
     {
       title: 'Students Managed',
-      value: '2',
+      value: '0',
       icon: Users,
       gradient: 'from-blue-600 to-cyan-600',
       change: 'Total'
     },
     {
       title: 'Attendance Records',
-      value: '4',
+      value: '0',
       icon: ClipboardCheck,
       gradient: 'from-green-600 to-teal-600',
       change: 'This week'
@@ -32,7 +35,75 @@ export function MemberDashboardHome() {
       gradient: 'from-orange-600 to-red-600',
       change: 'Pending'
     }
-  ];
+  ]);
+
+  const [memberName, setMemberName] = useState('Member');
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const currentMemberId = localStorage.getItem('currentMemberId');
+      
+      if (!currentMemberId) return;
+
+      // Get member info
+      const member = await memberStore.getById(currentMemberId);
+      if (member) {
+        setMemberName(member.name);
+        
+        // Count assigned projects
+        const projectCount = member.assignedProjects?.length || 0;
+        
+        // Get all projects to count active ones
+        const allProjects = await projectStore.getAll();
+        const activeProjects = allProjects.filter(p => 
+          member.assignedProjects?.includes(p.id) && p.status === 'Active'
+        ).length;
+
+        // Count students in member's projects
+        const allStudents = await studentStore.getAll();
+        const studentsInProjects = allStudents.filter(student =>
+          student.projects?.some(p => member.assignedProjects?.includes(p.projectId))
+        ).length;
+
+        setStats([
+          {
+            title: 'My Projects',
+            value: projectCount.toString(),
+            icon: FolderKanban,
+            gradient: 'from-purple-600 to-pink-600',
+            change: `${activeProjects} Active`
+          },
+          {
+            title: 'Students Managed',
+            value: studentsInProjects.toString(),
+            icon: Users,
+            gradient: 'from-blue-600 to-cyan-600',
+            change: 'Total'
+          },
+          {
+            title: 'Attendance Records',
+            value: '0',
+            icon: ClipboardCheck,
+            gradient: 'from-green-600 to-teal-600',
+            change: 'This week'
+          },
+          {
+            title: 'My Requisitions',
+            value: '0',
+            icon: FileText,
+            gradient: 'from-orange-600 to-red-600',
+            change: 'Pending'
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
 
   const recentActivity = [
     { action: 'Welcome to IPRT Member Dashboard', time: 'Just now', type: 'info', icon: AlertCircle }
@@ -46,7 +117,7 @@ export function MemberDashboardHome() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-r from-[#3B0764] to-[#8B5CF6] rounded-xl p-6 text-white"
       >
-        <h2 className="text-2xl font-bold mb-2">Welcome to Your Dashboard</h2>
+        <h2 className="text-2xl font-bold mb-2">Welcome back, {memberName}!</h2>
         <p className="text-white/90">Manage your assigned projects and track student progress</p>
       </motion.div>
 

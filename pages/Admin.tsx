@@ -8,9 +8,11 @@ import { AttendanceAdmin } from '../components/admin/AttendanceAdmin';
 import { RequisitionsAdmin } from '../components/admin/RequisitionsAdmin';
 import { TeamMembersAdmin } from '../components/admin/TeamMembersAdmin';
 import { DeletionRequestsAdmin } from '../components/admin/DeletionRequestsAdmin';
+import { MembersAdmin } from '../components/admin/MembersAdmin';
 import { NotificationBell } from '../components/admin/NotificationBell';
 import { Notification } from '../lib/notificationStore';
 import { deletionRequestStore } from '../lib/deletionRequestStore';
+import { memberStore } from '../lib/memberStore';
 import { MemberProjects } from '../components/member/MemberProjects';
 import { MemberAttendance } from '../components/member/MemberAttendance';
 import { MemberStudents } from '../components/member/MemberStudents';
@@ -73,18 +75,13 @@ export default function Admin() {
 
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
     const adminUsername = import.meta.env.VITE_ADMIN_USERNAME;
     const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
-    
-    // Member credentials (in real app, this would be from database)
-    const memberEmail = import.meta.env.VITE_MEMBER_EMAIL || 'member@iprt.com';
-    const memberUsername = import.meta.env.VITE_MEMBER_USERNAME || 'member';
-    const memberPassword = import.meta.env.VITE_MEMBER_PASSWORD || 'member123';
 
     if (userType === 'admin') {
       if ((email === adminEmail || email === adminUsername) && password === adminPassword) {
@@ -95,12 +92,21 @@ export default function Admin() {
         setError('Invalid admin credentials');
       }
     } else {
-      if ((email === memberEmail || email === memberUsername) && password === memberPassword) {
-        setIsAuthenticated(true);
-        setAuthenticatedUserType('member');
-        toast.success('Welcome to IPRT Member Dashboard!');
-      } else {
-        setError('Invalid member credentials');
+      // Authenticate member from database
+      try {
+        const member = await memberStore.authenticate(email, password);
+        if (member) {
+          setIsAuthenticated(true);
+          setAuthenticatedUserType('member');
+          localStorage.setItem('currentMemberId', member.id);
+          localStorage.setItem('currentMemberEmail', member.email);
+          toast.success(`Welcome ${member.name}!`);
+        } else {
+          setError('Invalid member credentials or account is inactive');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        setError('Login failed. Please try again.');
       }
     }
   };
@@ -150,8 +156,9 @@ export default function Admin() {
   // Update pending deletions count
   useEffect(() => {
     if (authenticatedUserType === 'admin' && isAuthenticated) {
-      const updateCount = () => {
-        setPendingDeletionsCount(deletionRequestStore.getPending().length);
+      const updateCount = async () => {
+        const pending = await deletionRequestStore.getPending();
+        setPendingDeletionsCount(pending.length);
       };
       
       updateCount();
@@ -623,6 +630,7 @@ export default function Admin() {
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="students">Students</TabsTrigger>
+              <TabsTrigger value="members">Members</TabsTrigger>
               <TabsTrigger value="attendance">Attendance</TabsTrigger>
               <TabsTrigger value="requisitions">Requisitions</TabsTrigger>
               <TabsTrigger value="deletions" className="relative">
@@ -648,6 +656,10 @@ export default function Admin() {
               <StudentsAdmin />
             </TabsContent>
 
+            <TabsContent value="members">
+              <MembersAdmin />
+            </TabsContent>
+
             <TabsContent value="attendance">
               <AttendanceAdmin />
             </TabsContent>
@@ -657,7 +669,10 @@ export default function Admin() {
             </TabsContent>
 
             <TabsContent value="deletions">
-              <DeletionRequestsAdmin onRequestProcessed={() => setPendingDeletionsCount(deletionRequestStore.getPending().length)} />
+              <DeletionRequestsAdmin onRequestProcessed={async () => {
+                const pending = await deletionRequestStore.getPending();
+                setPendingDeletionsCount(pending.length);
+              }} />
             </TabsContent>
 
             <TabsContent value="team">
@@ -681,6 +696,9 @@ export default function Admin() {
               <p className="text-sm text-gray-600 dark:text-gray-400">Institute for Practical Research & Training</p>
             </div>
             <div className="flex items-center gap-3">
+              {/* Notification Bell for Members */}
+              <NotificationBell onNotificationClick={handleNotificationClick} />
+              
               {/* Language Selector */}
               <div className="relative">
                 <Button

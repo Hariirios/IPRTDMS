@@ -5,11 +5,22 @@ import { teamStore } from '../lib/teamStore';
 
 export default function Facilitators() {
   const [facilitators, setFacilitators] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load facilitators from store
-    const members = teamStore.getByType('Facilitator');
-    setFacilitators(members);
+    // Load facilitators from database
+    const loadFacilitators = async () => {
+      setLoading(true);
+      try {
+        const members = await teamStore.getByType('Facilitator');
+        setFacilitators(members);
+      } catch (error) {
+        console.error('Error loading facilitators:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadFacilitators();
   }, []);
 
   const getGradient = (index: number) => {
@@ -56,7 +67,12 @@ export default function Facilitators() {
       {/* Facilitators Grid */}
       <section className="py-20 bg-white dark:bg-gray-950">
         <div className="container mx-auto px-4">
-          {facilitators.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading facilitators...</p>
+            </div>
+          ) : facilitators.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-600 dark:text-gray-400 text-lg">
                 No facilitators added yet. Please check back later.

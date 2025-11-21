@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Eye, Users, Calendar, Search, Trash2 } from 'lucide-react';
+import { Plus, Eye, Users, Calendar, Search, Trash2, FolderOpen } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { toast } from 'sonner';
 import { studentStore, Student } from '../../lib/studentStore';
+import { projectStore, Project as ProjectType } from '../../lib/projectStore';
+import { memberStore } from '../../lib/memberStore';
+import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
 
 interface Project {
   id: string;
@@ -18,35 +21,85 @@ interface Project {
 }
 
 export function MemberProjects() {
-  // Mock assigned projects - in real app, this would come from API
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'Research Methods Training',
-      status: 'Active',
-      description: 'Comprehensive training on research methodologies',
-      startDate: '2024-01-15',
-      endDate: '2024-06-30',
-      students: []
-    }
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
   const [isViewStudentsModalOpen, setIsViewStudentsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
   
   // Get students from shared store
   const [existingStudents, setExistingStudents] = useState<Student[]>([]);
 
-  useEffect(() => {
-    loadStudents();
+  const loadProjects = useCallback(async () => {
+    try {
+      setLoading(true);
+      // Get current member ID from localStorage
+      const currentMemberId = localStorage.getItem('currentMemberId');
+      
+      if (!currentMemberId) {
+        console.error('No member ID found');
+        setProjects([]);
+        return;
+      }
+
+      // Get member's assigned projects
+      const member = await memberStore.getById(currentMemberId);
+      if (!member || !member.assignedProjects || member.assignedProjects.length === 0) {
+        setProjects([]);
+        return;
+      }
+
+      // Fetch all projects and filter by assigned ones
+      const allProjects = await projectStore.getAll();
+      const assignedProjects = allProjects.filter(p => 
+        member.assignedProjects.includes(p.id)
+      );
+
+      // Get all students
+      const allStudents = await studentStore.getAll();
+
+      // Map projects with their students
+      const projectsWithStudents = assignedProjects.map(project => ({
+        id: project.id,
+        name: project.name,
+        status: project.status,
+        description: project.description,
+        startDate: project.startDate,
+        endDate: project.endDate,
+        students: allStudents.filter(student => 
+          student.projects?.some(p => p.projectId === project.id)
+        )
+      }));
+
+      setProjects(projectsWithStudents);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      toast.error('Failed to load projects');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const loadStudents = () => {
-    setExistingStudents(studentStore.getAll());
+  const loadStudents = async () => {
+    const data = await studentStore.getAll();
+    setExistingStudents(data);
   };
+
+  useEffect(() => {
+    loadProjects();
+    loadStudents();
+  }, [loadProjects]);
+
+  // Real-time subscriptions
+  useRealtimeSubscription('projects', loadProjects);
+  useRealtimeSubscription('members', loadProjects);
+  useRealtimeSubscription('students', () => {
+    loadProjects();
+    loadStudents();
+  });
 
   const [newStudentForm, setNewStudentForm] = useState({
     fullName: '',
@@ -58,7 +111,7 @@ export function MemberProjects() {
 
   const [selectedExistingStudent, setSelectedExistingStudent] = useState('');
 
-  const handleAddExistingStudent = () => {
+  const handleAddExistingStudent = async () => {
     if (!selectedProject || !selectedExistingStudent) return;
 
     const student = existingStudents.find(s => s.id === selectedExistingStudent);
@@ -70,47 +123,56 @@ export function MemberProjects() {
       return;
     }
 
-    // Add project to student record
-    studentStore.addProjectToStudent(student.id, selectedProject.id, selectedProject.name);
+    try {
+      // Add project to student record
+      await studentStore.addProjectToStudent(student.id, selectedProject.id, selectedProject.name);
 
-    setProjects(projects.map(p =>
-      p.id === selectedProject.id
-        ? { ...p, students: [...p.students, student] }
-        : p
-    ));
+      setProjects(projects.map(p =>
+        p.id === selectedProject.id
+          ? { ...p, students: [...p.students, student] }
+          : p
+      ));
 
-    toast.success('Student added to project successfully!');
-    setSelectedExistingStudent('');
-    setIsAddStudentModalOpen(false);
-    loadStudents();
+      toast.success('Student added to project successfully!');
+      setSelectedExistingStudent('');
+      setIsAddStudentModalOpen(false);
+      await loadStudents();
+    } catch (error) {
+      toast.error('Failed to add student to project');
+      console.error(error);
+    }
   };
 
-  const handleAddNewStudent = (e: React.FormEvent) => {
+  const handleAddNewStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProject) return;
 
-    // Add student to shared store
-    const newStudent = studentStore.add({
-      ...newStudentForm,
-      addedBy: 'member',
-      addedByEmail: 'member@iprt.edu',
-      projects: [{
-        projectId: selectedProject.id,
-        projectName: selectedProject.name,
-        assignedDate: new Date().toISOString().split('T')[0]
-      }]
-    });
+    try {
+      // Add student to shared store
+      const newStudent = await studentStore.add({
+        ...newStudentForm,
+        addedBy: 'member',
+        addedByEmail: 'member@iprt.edu',
+        projects: []
+      });
 
-    setProjects(projects.map(p =>
-      p.id === selectedProject.id
-        ? { ...p, students: [...p.students, newStudent] }
-        : p
-    ));
+      // Add project to student
+      await studentStore.addProjectToStudent(newStudent.id, selectedProject.id, selectedProject.name);
 
-    toast.success('New student added to project successfully!');
-    setNewStudentForm({ fullName: '', email: '', phone: '', enrollmentDate: '', status: 'Active' });
-    setIsAddStudentModalOpen(false);
-    loadStudents();
+      setProjects(projects.map(p =>
+        p.id === selectedProject.id
+          ? { ...p, students: [...p.students, newStudent] }
+          : p
+      ));
+
+      toast.success('New student added to project successfully!');
+      setNewStudentForm({ fullName: '', email: '', phone: '', enrollmentDate: '', status: 'Active' });
+      setIsAddStudentModalOpen(false);
+      await loadStudents();
+    } catch (error) {
+      toast.error('Failed to add new student');
+      console.error(error);
+    }
   };
 
   const handleRemoveStudentFromProject = (studentId: string) => {
@@ -171,9 +233,16 @@ export function MemberProjects() {
 
       {/* Projects List */}
       <div className="grid grid-cols-1 gap-4">
-        {filteredProjects.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl">
-            <p className="text-gray-600 dark:text-gray-400">No projects assigned yet.</p>
+        {loading ? (
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading your projects...</p>
+          </div>
+        ) : filteredProjects.length === 0 ? (
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+            <FolderOpen className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+            <p className="text-gray-600 dark:text-gray-400 mb-2">No projects assigned yet.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500">Contact your admin to get assigned to projects.</p>
           </div>
         ) : (
           filteredProjects.map((project, index) => (

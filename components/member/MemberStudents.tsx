@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { Plus, Edit, Trash2, Search, Eye, FolderOpen, AlertTriangle } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -7,6 +7,7 @@ import { Label } from '../ui/label';
 import { toast } from 'sonner';
 import { studentStore, Student } from '../../lib/studentStore';
 import { deletionRequestStore } from '../../lib/deletionRequestStore';
+import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
 
 export function MemberStudents() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -27,35 +28,45 @@ export function MemberStudents() {
     status: 'Active' as 'Active' | 'Completed' | 'Dropped'
   });
 
+  const loadStudents = useCallback(async () => {
+    const data = await studentStore.getAll();
+    setStudents(data);
+  }, []);
+
   // Load students on mount
   useEffect(() => {
     loadStudents();
-  }, []);
+  }, [loadStudents]);
 
-  const loadStudents = () => {
-    setStudents(studentStore.getAll());
-  };
+  // Real-time subscription for auto-reload
+  useRealtimeSubscription('students', loadStudents);
+  useRealtimeSubscription('project_students', loadStudents);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingStudent) {
-      // Update existing student
-      studentStore.update(editingStudent.id, formData);
-      toast.success('Student updated successfully!');
-    } else {
-      // Add new student
-      studentStore.add({
-        ...formData,
-        addedBy: 'member',
-        addedByEmail: 'member@iprt.edu', // In real app, get from auth context
-        projects: []
-      });
-      toast.success('Student added successfully!');
+    try {
+      if (editingStudent) {
+        // Update existing student
+        await studentStore.update(editingStudent.id, formData);
+        toast.success('Student updated successfully!');
+      } else {
+        // Add new student
+        await studentStore.add({
+          ...formData,
+          addedBy: 'member',
+          addedByEmail: 'member@iprt.edu', // In real app, get from auth context
+          projects: []
+        });
+        toast.success('Student added successfully!');
+      }
+      
+      await loadStudents();
+      handleCloseModal();
+    } catch (error) {
+      toast.error('Failed to save student. Please try again.');
+      console.error(error);
     }
-    
-    loadStudents();
-    handleCloseModal();
   };
 
   const handleEdit = (student: Student) => {
@@ -76,7 +87,7 @@ export function MemberStudents() {
     setIsDeletionModalOpen(true);
   };
 
-  const submitDeletionRequest = (e: React.FormEvent) => {
+  const submitDeletionRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!deletingStudent || !deletionReason.trim()) {
@@ -84,19 +95,24 @@ export function MemberStudents() {
       return;
     }
 
-    deletionRequestStore.add({
-      studentId: deletingStudent.id,
-      studentName: deletingStudent.fullName,
-      studentEmail: deletingStudent.email,
-      requestedBy: 'member',
-      requestedByEmail: 'member@iprt.edu', // In real app, get from auth context
-      reason: deletionReason
-    });
+    try {
+      await deletionRequestStore.add({
+        studentId: deletingStudent.id,
+        studentName: deletingStudent.fullName,
+        studentEmail: deletingStudent.email,
+        requestedBy: 'member',
+        requestedByEmail: 'member@iprt.edu', // In real app, get from auth context
+        reason: deletionReason
+      });
 
-    toast.success('🔔 Deletion request submitted! Admin has been notified and will review your request.');
-    setIsDeletionModalOpen(false);
-    setDeletingStudent(null);
-    setDeletionReason('');
+      toast.success('🔔 Deletion request submitted! Admin has been notified and will review your request.');
+      setIsDeletionModalOpen(false);
+      setDeletingStudent(null);
+      setDeletionReason('');
+    } catch (error) {
+      toast.error('Failed to submit deletion request. Please try again.');
+      console.error(error);
+    }
   };
 
   const handleView = (student: Student) => {

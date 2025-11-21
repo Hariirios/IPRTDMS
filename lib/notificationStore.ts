@@ -1,3 +1,5 @@
+import { supabase } from './supabase';
+
 // Notification store for admin notifications
 export interface Notification {
   id: string;
@@ -10,46 +12,199 @@ export interface Notification {
   createdBy: string;
 }
 
-// In-memory store (in real app, this would be in database)
-let notifications: Notification[] = [];
-
 export const notificationStore = {
-  getAll: () => notifications,
-  
-  getUnread: () => notifications.filter(n => !n.isRead),
-  
-  getUnreadCount: () => notifications.filter(n => !n.isRead).length,
-  
-  getById: (id: string) => notifications.find(n => n.id === id),
-  
-  add: (notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'>) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      isRead: false
-    };
-    notifications.unshift(newNotification); // Add to beginning
-    return newNotification;
-  },
-  
-  markAsRead: (id: string) => {
-    const notification = notifications.find(n => n.id === id);
-    if (notification) {
-      notification.isRead = true;
+  getAll: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map(n => ({
+        id: n.id,
+        type: n.type as Notification['type'],
+        title: n.title,
+        message: n.message,
+        relatedId: n.related_id,
+        isRead: n.is_read,
+        createdAt: n.created_at,
+        createdBy: n.created_by
+      }));
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      return [];
     }
-    return notification;
   },
   
-  markAllAsRead: () => {
-    notifications.forEach(n => n.isRead = true);
+  getUnread: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('is_read', false)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map(n => ({
+        id: n.id,
+        type: n.type as Notification['type'],
+        title: n.title,
+        message: n.message,
+        relatedId: n.related_id,
+        isRead: n.is_read,
+        createdAt: n.created_at,
+        createdBy: n.created_by
+      }));
+    } catch (error) {
+      console.error('Error fetching unread notifications:', error);
+      return [];
+    }
   },
   
-  delete: (id: string) => {
-    notifications = notifications.filter(n => n.id !== id);
+  getUnreadCount: async () => {
+    try {
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_read', false);
+
+      if (error) throw error;
+      return count || 0;
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+      return 0;
+    }
   },
   
-  deleteAll: () => {
-    notifications = [];
+  getById: async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      return {
+        id: data.id,
+        type: data.type as Notification['type'],
+        title: data.title,
+        message: data.message,
+        relatedId: data.related_id,
+        isRead: data.is_read,
+        createdAt: data.created_at,
+        createdBy: data.created_by
+      };
+    } catch (error) {
+      console.error('Error fetching notification:', error);
+      return null;
+    }
+  },
+  
+  add: async (notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert({
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          related_id: notification.relatedId,
+          is_read: false,
+          created_by: notification.createdBy
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: data.id,
+        type: data.type as Notification['type'],
+        title: data.title,
+        message: data.message,
+        relatedId: data.related_id,
+        isRead: data.is_read,
+        createdAt: data.created_at,
+        createdBy: data.created_by
+      };
+    } catch (error) {
+      console.error('Error adding notification:', error);
+      throw error;
+    }
+  },
+  
+  markAsRead: async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: data.id,
+        type: data.type as Notification['type'],
+        title: data.title,
+        message: data.message,
+        relatedId: data.related_id,
+        isRead: data.is_read,
+        createdAt: data.created_at,
+        createdBy: data.created_by
+      };
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      throw error;
+    }
+  },
+  
+  markAllAsRead: async () => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('is_read', false);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+      throw error;
+    }
+  },
+  
+  delete: async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      throw error;
+    }
+  },
+  
+  deleteAll: async () => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting all notifications:', error);
+      throw error;
+    }
   }
 };

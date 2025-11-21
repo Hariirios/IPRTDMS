@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, X, Trash2, CheckCheck } from 'lucide-react';
 import { Button } from '../ui/button';
 import { notificationStore, Notification } from '../../lib/notificationStore';
+import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
 
 interface NotificationBellProps {
   onNotificationClick?: (notification: Notification) => void;
@@ -13,23 +14,24 @@ export function NotificationBell({ onNotificationClick }: NotificationBellProps)
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    loadNotifications();
-    
-    // Poll for new notifications every 5 seconds
-    const interval = setInterval(loadNotifications, 5000);
-    return () => clearInterval(interval);
+  const loadNotifications = useCallback(async () => {
+    const data = await notificationStore.getAll();
+    const count = await notificationStore.getUnreadCount();
+    setNotifications(data);
+    setUnreadCount(count);
   }, []);
 
-  const loadNotifications = () => {
-    setNotifications(notificationStore.getAll());
-    setUnreadCount(notificationStore.getUnreadCount());
-  };
-
-  const handleNotificationClick = (notification: Notification) => {
-    // Mark as read
-    notificationStore.markAsRead(notification.id);
+  useEffect(() => {
     loadNotifications();
+  }, [loadNotifications]);
+
+  // Real-time subscription for auto-reload (replaces polling)
+  useRealtimeSubscription('notifications', loadNotifications);
+
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read
+    await notificationStore.markAsRead(notification.id);
+    await loadNotifications();
     
     // Call parent callback if provided
     if (onNotificationClick) {
@@ -37,15 +39,15 @@ export function NotificationBell({ onNotificationClick }: NotificationBellProps)
     }
   };
 
-  const handleMarkAllAsRead = () => {
-    notificationStore.markAllAsRead();
-    loadNotifications();
+  const handleMarkAllAsRead = async () => {
+    await notificationStore.markAllAsRead();
+    await loadNotifications();
   };
 
-  const handleDeleteNotification = (id: string, e: React.MouseEvent) => {
+  const handleDeleteNotification = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    notificationStore.delete(id);
-    loadNotifications();
+    await notificationStore.delete(id);
+    await loadNotifications();
   };
 
   const getNotificationIcon = (type: string) => {

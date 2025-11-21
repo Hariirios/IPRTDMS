@@ -5,11 +5,22 @@ import { teamStore } from '../lib/teamStore';
 
 export default function Staff() {
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load staff members from store
-    const members = teamStore.getByType('Staff');
-    setStaffMembers(members);
+    // Load staff members from database
+    const loadStaff = async () => {
+      setLoading(true);
+      try {
+        const members = await teamStore.getByType('Staff');
+        setStaffMembers(members);
+      } catch (error) {
+        console.error('Error loading staff:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadStaff();
   }, []);
 
   const getGradient = (index: number) => {
@@ -48,7 +59,12 @@ export default function Staff() {
       {/* Staff Grid */}
       <section className="py-20 bg-white dark:bg-gray-950">
         <div className="container mx-auto px-4">
-          {staffMembers.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading staff members...</p>
+            </div>
+          ) : staffMembers.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-600 dark:text-gray-400 text-lg">
                 No staff members added yet. Please check back later.

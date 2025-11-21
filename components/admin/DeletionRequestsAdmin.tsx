@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { CheckCircle, XCircle, Clock, AlertTriangle, User, Mail, Calendar } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -6,6 +6,7 @@ import { Label } from '../ui/label';
 import { toast } from 'sonner';
 import { deletionRequestStore, DeletionRequest } from '../../lib/deletionRequestStore';
 import { studentStore } from '../../lib/studentStore';
+import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
 
 interface DeletionRequestsAdminProps {
   onRequestProcessed?: () => void;
@@ -19,16 +20,20 @@ export function DeletionRequestsAdmin({ onRequestProcessed }: DeletionRequestsAd
   const [responseType, setResponseType] = useState<'approve' | 'reject'>('approve');
   const [adminResponse, setAdminResponse] = useState('');
 
-  useEffect(() => {
-    loadRequests();
-  }, []);
-
-  const loadRequests = () => {
-    setRequests(deletionRequestStore.getAll());
+  const loadRequests = useCallback(async () => {
+    const data = await deletionRequestStore.getAll();
+    setRequests(data);
     if (onRequestProcessed) {
       onRequestProcessed();
     }
-  };
+  }, [onRequestProcessed]);
+
+  useEffect(() => {
+    loadRequests();
+  }, [loadRequests]);
+
+  // Real-time subscription for auto-reload
+  useRealtimeSubscription('deletion_requests', loadRequests);
 
   const handleApprove = (request: DeletionRequest) => {
     setSelectedRequest(request);
@@ -44,7 +49,7 @@ export function DeletionRequestsAdmin({ onRequestProcessed }: DeletionRequestsAd
     setIsResponseModalOpen(true);
   };
 
-  const submitResponse = (e: React.FormEvent) => {
+  const submitResponse = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedRequest) return;
@@ -56,21 +61,26 @@ export function DeletionRequestsAdmin({ onRequestProcessed }: DeletionRequestsAd
 
     const adminEmail = 'admin@iprt.edu'; // In real app, get from auth context
 
-    if (responseType === 'approve') {
-      // Approve and delete the student
-      deletionRequestStore.approve(selectedRequest.id, adminEmail, adminResponse);
-      studentStore.delete(selectedRequest.studentId);
-      toast.success('Deletion request approved and student deleted!');
-    } else {
-      // Reject the request
-      deletionRequestStore.reject(selectedRequest.id, adminEmail, adminResponse);
-      toast.success('Deletion request rejected!');
-    }
+    try {
+      if (responseType === 'approve') {
+        // Approve and delete the student
+        await deletionRequestStore.approve(selectedRequest.id, adminEmail, adminResponse);
+        await studentStore.delete(selectedRequest.studentId);
+        toast.success('Deletion request approved and student deleted!');
+      } else {
+        // Reject the request
+        await deletionRequestStore.reject(selectedRequest.id, adminEmail, adminResponse);
+        toast.success('Deletion request rejected!');
+      }
 
-    loadRequests();
-    setIsResponseModalOpen(false);
-    setSelectedRequest(null);
-    setAdminResponse('');
+      await loadRequests();
+      setIsResponseModalOpen(false);
+      setSelectedRequest(null);
+      setAdminResponse('');
+    } catch (error) {
+      toast.error('Failed to process request. Please try again.');
+      console.error(error);
+    }
   };
 
   const filteredRequests = requests.filter(request => {

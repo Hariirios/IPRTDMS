@@ -5,24 +5,24 @@ import { teamStore } from '../lib/teamStore';
 
 export default function Technicians() {
   const [technicians, setTechnicians] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('All Team');
 
   useEffect(() => {
-    // Load technicians from store
-    const members = teamStore.getByType('Technician');
-    setTechnicians(members);
+    // Load technicians from database
+    const loadTechnicians = async () => {
+      setLoading(true);
+      try {
+        const members = await teamStore.getByType('Technician');
+        setTechnicians(members);
+      } catch (error) {
+        console.error('Error loading technicians:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadTechnicians();
   }, []);
-
-  const getGradient = (index: number) => {
-    const gradients = [
-      "from-purple-600 to-pink-600",
-      "from-pink-600 to-rose-600",
-      "from-blue-600 to-purple-600",
-      "from-cyan-600 to-blue-600",
-      "from-indigo-600 to-purple-600",
-      "from-teal-600 to-green-600"
-    ];
-    return gradients[index % gradients.length];
-  };
 
   const services = [
     {
@@ -48,30 +48,94 @@ export default function Technicians() {
   ];
 
   return (
-    <div className="min-h-screen pt-20">
-      {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-br from-[#8B5CF6] to-[#3B0764] dark:from-[#3B0764] dark:to-[#3B0764]">
+    <div className="min-h-screen pt-20 bg-gray-50 dark:bg-gray-950">
+      {/* Hero Section with Image and Text */}
+      <section className="relative py-20 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <h1 className="text-white mb-6">
-              Our Technicians
-            </h1>
-            <p className="text-white/90 text-xl leading-relaxed">
-              Our technical team ensures all equipment and systems run smoothly to support our research and training activities
-            </p>
-          </motion.div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+            {/* Left: Image */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="relative"
+            >
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+                <img
+                  src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=600&fit=crop"
+                  alt="Technician working"
+                  className="w-full h-[400px] object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+              </div>
+            </motion.div>
+
+            {/* Right: Text */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <h1 className="text-4xl md:text-5xl font-bold text-[#1e3a8a] dark:text-white mb-6">
+                We Value Our Skilled Technicians
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">
+                At Institute for Practical Research Training, our dedicated technicians are the driving force behind the development and smooth operation of our system. Their expertise and commitment ensure seamless functionality, enabling us to provide effective solutions that support the organization. We deeply appreciate their hard work in creating and maintaining systems that empower our mission.
+              </p>
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* Technicians Grid */}
-      <section className="py-20 bg-white dark:bg-gray-950">
+      {/* Meet Our Technicians Section */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-950">
         <div className="container mx-auto px-4">
-          {technicians.length === 0 ? (
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl font-bold text-[#1e3a8a] dark:text-white mb-4">
+              Meet Our Technicians
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 text-lg max-w-3xl mx-auto">
+              Meet the talented professionals who work tirelessly to maintain and improve our technological infrastructure.
+            </p>
+          </motion.div>
+
+          {/* Filter Tabs */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex justify-center gap-4 mb-12"
+          >
+            {['All Team', 'Leadership', 'Developers'].map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                  activeFilter === filter
+                    ? 'bg-[#3B5BDB] text-white shadow-lg'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </motion.div>
+
+          {/* Technicians Grid */}
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading technicians...</p>
+            </div>
+          ) : technicians.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-600 dark:text-gray-400 text-lg">
                 No technicians added yet. Please check back later.
@@ -86,47 +150,38 @@ export default function Technicians() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
-                  className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all"
+                  className="text-center"
                 >
-                  {/* Avatar */}
+                  {/* Avatar with Red Border */}
                   <div className="flex justify-center mb-4">
-                    {technician.image ? (
-                      <img
-                        src={technician.image}
-                        alt={technician.name}
-                        className="w-24 h-24 rounded-full object-cover shadow-lg"
-                      />
-                    ) : (
-                      <div className={`w-24 h-24 bg-gradient-to-br ${getGradient(index)} rounded-full flex items-center justify-center shadow-lg`}>
-                        <span className="text-white text-2xl font-bold">
-                          {technician.name.charAt(0)}
-                        </span>
-                      </div>
-                    )}
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-pink-500 rounded-full blur-sm"></div>
+                      {technician.image ? (
+                        <img
+                          src={technician.image}
+                          alt={technician.name}
+                          className="relative w-32 h-32 rounded-full object-cover border-4 border-red-500 shadow-xl"
+                        />
+                      ) : (
+                        <div className="relative w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center border-4 border-red-500 shadow-xl">
+                          <span className="text-white text-3xl font-bold">
+                            {technician.name.charAt(0)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Info */}
-                  <div className="text-center space-y-2">
-                    <h3 className="text-gray-900 dark:text-white font-semibold text-lg">
+                  <div className="space-y-2">
+                    <h3 className="text-gray-900 dark:text-white font-bold text-lg">
                       {technician.name}
                     </h3>
-                    <p className="text-[#3B0764] dark:text-[#8B5CF6] font-medium">
+                    <p className="text-gray-600 dark:text-gray-400 font-medium">
                       {technician.role}
                     </p>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm flex items-center justify-center gap-1">
-                      <Building className="h-4 w-4" />
+                    <div className="inline-block px-4 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
                       {technician.department}
-                    </p>
-                    <div className="pt-2 space-y-1">
-                      <p className="text-gray-600 dark:text-gray-400 text-xs flex items-center justify-center gap-1">
-                        <Mail className="h-3 w-3" />
-                        {technician.email}
-                      </p>
-                      <p className="text-gray-600 dark:text-gray-400 text-xs flex items-center justify-center gap-1">
-                        <Phone className="h-3 w-3" />
-                        {technician.phone}
-                      </p>
                     </div>
                   </div>
                 </motion.div>

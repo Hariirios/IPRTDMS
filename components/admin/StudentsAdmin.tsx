@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { Plus, Edit, Trash2, Search, Eye, FolderOpen, User } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -6,17 +6,23 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { toast } from 'sonner';
 import { studentStore, Student } from '../../lib/studentStore';
+import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
 
 export function StudentsAdmin() {
   const [students, setStudents] = useState<Student[]>([]);
   
-  useEffect(() => {
-    loadStudents();
+  const loadStudents = useCallback(async () => {
+    const data = await studentStore.getAll();
+    setStudents(data);
   }, []);
 
-  const loadStudents = () => {
-    setStudents(studentStore.getAll());
-  };
+  useEffect(() => {
+    loadStudents();
+  }, [loadStudents]);
+
+  // Real-time subscription for auto-reload
+  useRealtimeSubscription('students', loadStudents);
+  useRealtimeSubscription('project_students', loadStudents);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -32,24 +38,29 @@ export function StudentsAdmin() {
     status: 'Active' as 'Active' | 'Completed' | 'Dropped'
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingStudent) {
-      studentStore.update(editingStudent.id, formData);
-      toast.success('Student updated successfully!');
-    } else {
-      studentStore.add({
-        ...formData,
-        addedBy: 'admin',
-        addedByEmail: 'admin@iprt.edu',
-        projects: []
-      });
-      toast.success('Student added successfully!');
+    try {
+      if (editingStudent) {
+        await studentStore.update(editingStudent.id, formData);
+        toast.success('Student updated successfully!');
+      } else {
+        await studentStore.add({
+          ...formData,
+          addedBy: 'admin',
+          addedByEmail: 'admin@iprt.edu',
+          projects: []
+        });
+        toast.success('Student added successfully!');
+      }
+      
+      await loadStudents();
+      handleCloseModal();
+    } catch (error) {
+      toast.error('Failed to save student. Please try again.');
+      console.error(error);
     }
-    
-    loadStudents();
-    handleCloseModal();
   };
 
   const handleEdit = (student: Student) => {
@@ -69,11 +80,16 @@ export function StudentsAdmin() {
     setIsViewModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this student? This will remove them from all projects.')) {
-      studentStore.delete(id);
-      loadStudents();
-      toast.success('Student deleted successfully!');
+      try {
+        await studentStore.delete(id);
+        await loadStudents();
+        toast.success('Student deleted successfully!');
+      } catch (error) {
+        toast.error('Failed to delete student. Please try again.');
+        console.error(error);
+      }
     }
   };
 
