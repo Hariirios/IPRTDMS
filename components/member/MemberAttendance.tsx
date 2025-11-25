@@ -1,105 +1,162 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { Eye, CheckCircle, XCircle, Calendar, Users, Search } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, Calendar, Users, Search, Clock } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { toast } from 'sonner';
+import { projectStore, Project } from '../../lib/projectStore';
+import { studentStore, Student } from '../../lib/studentStore';
+import { attendanceStore } from '../../lib/attendanceStore';
+import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
 
-interface Student {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  enrollmentDate: string;
-  status: 'Active' | 'Completed' | 'Dropped';
-}
-
-interface AttendanceRecord {
-  studentId: string;
-  date: string;
-  status: 'Present' | 'Absent' | 'Absent with Reason';
-  comment?: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
+interface ProjectWithStudents extends Project {
   students: Student[];
-  attendanceRecords: AttendanceRecord[];
 }
 
 export function MemberAttendance() {
-  // Mock projects with students
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'Research Methods Training',
-      students: [
-        { id: '1', fullName: 'Ahmed Hassan', email: 'ahmed@example.com', phone: '123-456-7890', enrollmentDate: '2024-01-10', status: 'Active' },
-        { id: '2', fullName: 'Fatima Ali', email: 'fatima@example.com', phone: '123-456-7891', enrollmentDate: '2024-01-12', status: 'Active' }
-      ],
-      attendanceRecords: []
-    }
-  ]);
-
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<ProjectWithStudents[]>([]);
+  const [selectedProject, setSelectedProject] = useState<ProjectWithStudents | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isViewStudentModalOpen, setIsViewStudentModalOpen] = useState(false);
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
-  const [attendanceStatus, setAttendanceStatus] = useState<{ [key: string]: 'Present' | 'Absent' | 'Absent with Reason' }>({});
+  const [attendanceStatus, setAttendanceStatus] = useState<{ [key: string]: 'Present' | 'Late' | 'Absent' | 'Absent with Reason' }>({});
   const [attendanceComments, setAttendanceComments] = useState<{ [key: string]: string }>({});
+  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const currentMemberId = localStorage.getItem('currentMemberId');
+      
+      if (!currentMemberId) {
+        setProjects([]);
+        return;
+      }
+
+      // Get member's assigned projects
+      const allProjects = await projectStore.getAll();
+      const allStudents = await studentStore.getAll();
+      const allAttendance = await attendanceStore.getAll();
+
+      // Filter projects assigned to this member
+      const memberProjects = allProjects.filter(p => 
+        p.assignedMembers?.includes(currentMemberId)
+      );
+
+      // Get students for each project
+      const projectsWithStudents: ProjectWithStudents[] = memberProjects.map(project => {
+        const projectStudents = allStudents.filter(student =>
+          student.projects?.some(p => p.projectId === project.id)
+        );
+        return {
+          ...project,
+          students: projectStudents
+        };
+      });
+
+      setProjects(projectsWithStudents);
+      setAttendanceRecords(allAttendance);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast.error('Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Real-time subscriptions
+  useRealtimeSubscription('projects', loadData);
+  useRealtimeSubscription('students', loadData);
+  useRealtimeSubscription('project_students', loadData);
+  useRealtimeSubscription('attendance', loadData);
 
   const handleViewStudent = (student: Student) => {
     setSelectedStudent(student);
     setIsViewStudentModalOpen(true);
   };
 
-  const handleTakeAttendance = (project: Project) => {
+  const handleTakeAttendance = async (project: ProjectWithStudents) => {
+    // Check if attendance already marked for today
+    const alreadyMarked = await attendanceStore.checkIfMarked(project.id, attendanceDate);
+    
+    if (alreadyMarked) {
+      toast.error(`Attendance already marked for ${attendanceDate}`);
+      return;
+    }
+
     setSelectedProject(project);
     setIsAttendanceModalOpen(true);
     
     // Initialize attendance status for all students
-    const initialStatus: { [key: string]: 'Present' | 'Absent' } = {};
+    const initialStatus: { [key: string]: 'Present' | 'Late' | 'Absent' | 'Absent with Reason' } = {};
     project.students.forEach(student => {
       initialStatus[student.id] = 'Present';
     });
     setAttendanceStatus(initialStatus);
-  };
-
-  const handleSubmitAttendance = () => {
-    if (!selectedProject) return;
-
-    const newRecords: AttendanceRecord[] = Object.entries(attendanceStatus).map(([studentId, status]) => ({
-      studentId,
-      date: attendanceDate,
-      status,
-      comment: attendanceComments[studentId] || ''
-    }));
-
-    setProjects(projects.map(p =>
-      p.id === selectedProject.id
-        ? { ...p, attendanceRecords: [...p.attendanceRecords, ...newRecords] }
-        : p
-    ));
-
-    toast.success('Attendance recorded successfully!');
-    setIsAttendanceModalOpen(false);
-    setSelectedProject(null);
     setAttendanceComments({});
   };
 
-  const getAttendanceStats = (project: Project, studentId: string) => {
-    const records = project.attendanceRecords.filter(r => r.studentId === studentId);
+  const handleSubmitAttendance = async () => {
+    if (!selectedProject) return;
+
+    try {
+      const memberEmail = localStorage.getItem('currentMemberEmail') || 'member@iprt.edu';
+      
+      const attendanceRecords = Object.entries(attendanceStatus).map(([studentId, status]) => ({
+        student_id: studentId,
+        project_id: selectedProject.id,
+        date: attendanceDate,
+        status,
+        comment: attendanceComments[studentId] || '',
+        marked_by: memberEmail
+      }));
+
+      await attendanceStore.addBulk(attendanceRecords);
+      
+      toast.success('Attendance recorded successfully!');
+      setIsAttendanceModalOpen(false);
+      setSelectedProject(null);
+      setAttendanceComments({});
+      await loadData();
+    } catch (error) {
+      console.error('Error submitting attendance:', error);
+      toast.error('Failed to submit attendance');
+    }
+  };
+
+  const getAttendanceStats = (studentId: string) => {
+    const records = attendanceRecords.filter(r => r.student_id === studentId);
     const present = records.filter(r => r.status === 'Present').length;
+    const late = records.filter(r => r.status === 'Late').length;
     const total = records.length;
-    return { present, total, percentage: total > 0 ? Math.round((present / total) * 100) : 0 };
+    // Late counts as Present for attendance percentage
+    return { present: present + late, total, percentage: total > 0 ? Math.round(((present + late) / total) * 100) : 0 };
+  };
+
+  const getStudentAttendanceHistory = (studentId: string) => {
+    return attendanceRecords
+      .filter(r => r.student_id === studentId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   };
 
   const filteredProjects = projects.filter(project =>
     project.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3B0764]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -125,7 +182,7 @@ export function MemberAttendance() {
       <div className="grid grid-cols-1 gap-6">
         {filteredProjects.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl">
-            <p className="text-gray-600 dark:text-gray-400">No projects found.</p>
+            <p className="text-gray-600 dark:text-gray-400">No projects assigned to you yet.</p>
           </div>
         ) : (
           filteredProjects.map((project, index) => (
@@ -162,7 +219,7 @@ export function MemberAttendance() {
               ) : (
                 <div className="space-y-3">
                   {project.students.map((student) => {
-                    const stats = getAttendanceStats(project, student.id);
+                    const stats = getAttendanceStats(student.id);
                     return (
                       <div
                         key={student.id}
@@ -241,44 +298,45 @@ export function MemberAttendance() {
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Attendance History</h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {projects.flatMap(p => 
-                    p.attendanceRecords
-                      .filter(r => r.studentId === selectedStudent.id)
-                      .map(record => (
-                        <div key={`${record.date}-${record.studentId}`} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                              <span className="text-sm text-gray-900 dark:text-white">{record.date}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {record.status === 'Present' ? (
-                                <>
-                                  <CheckCircle className="h-4 w-4 text-green-600" />
-                                  <span className="text-sm font-semibold text-green-600">Present</span>
-                                </>
-                              ) : record.status === 'Absent with Reason' ? (
-                                <>
-                                  <XCircle className="h-4 w-4 text-yellow-600" />
-                                  <span className="text-sm font-semibold text-yellow-600">Absent (Reason)</span>
-                                </>
-                              ) : (
-                                <>
-                                  <XCircle className="h-4 w-4 text-red-600" />
-                                  <span className="text-sm font-semibold text-red-600">Absent</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          {record.comment && (
-                            <div className="pl-6 text-sm text-gray-600 dark:text-gray-400 italic">
-                              Reason: {record.comment}
-                            </div>
+                  {getStudentAttendanceHistory(selectedStudent.id).map((record, idx) => (
+                    <div key={idx} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                          <span className="text-sm text-gray-900 dark:text-white">{record.date}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {record.status === 'Present' ? (
+                            <>
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              <span className="text-sm font-semibold text-green-600">Present</span>
+                            </>
+                          ) : record.status === 'Late' ? (
+                            <>
+                              <Clock className="h-4 w-4 text-orange-600" />
+                              <span className="text-sm font-semibold text-orange-600">Late</span>
+                            </>
+                          ) : record.status === 'Absent with Reason' ? (
+                            <>
+                              <XCircle className="h-4 w-4 text-yellow-600" />
+                              <span className="text-sm font-semibold text-yellow-600">Absent (Informed)</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="h-4 w-4 text-red-600" />
+                              <span className="text-sm font-semibold text-red-600">Absent (Not Informed)</span>
+                            </>
                           )}
                         </div>
-                      ))
-                  )}
-                  {projects.every(p => p.attendanceRecords.filter(r => r.studentId === selectedStudent.id).length === 0) && (
+                      </div>
+                      {record.comment && (
+                        <div className="pl-6 text-sm text-gray-600 dark:text-gray-400 italic">
+                          Reason: {record.comment}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {getStudentAttendanceHistory(selectedStudent.id).length === 0 && (
                     <p className="text-center text-gray-600 dark:text-gray-400 py-4">No attendance records yet.</p>
                   )}
                 </div>
@@ -316,9 +374,13 @@ export function MemberAttendance() {
               <Input
                 type="date"
                 value={attendanceDate}
+                max={new Date().toISOString().split('T')[0]}
                 onChange={(e) => setAttendanceDate(e.target.value)}
                 className="max-w-xs"
               />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Cannot mark attendance for future dates
+              </p>
             </div>
 
             <div className="space-y-4 mb-6">
@@ -332,59 +394,77 @@ export function MemberAttendance() {
                       <h4 className="font-semibold text-gray-900 dark:text-white">{student.fullName}</h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">{student.email}</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 flex-wrap">
                       <Button
                         size="sm"
                         onClick={() => {
                           setAttendanceStatus({ ...attendanceStatus, [student.id]: 'Present' });
                           setAttendanceComments({ ...attendanceComments, [student.id]: '' });
                         }}
-                        className={attendanceStatus[student.id] === 'Present' 
+                        className={`text-xs px-2 ${attendanceStatus[student.id] === 'Present' 
                           ? 'bg-green-600 hover:bg-green-700 text-white' 
                           : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-                        }
+                        }`}
                       >
-                        <CheckCircle className="h-4 w-4 mr-1" />
+                        <CheckCircle className="h-3 w-3 mr-1" />
                         Present
                       </Button>
                       <Button
                         size="sm"
                         onClick={() => {
-                          setAttendanceStatus({ ...attendanceStatus, [student.id]: 'Absent' });
+                          setAttendanceStatus({ ...attendanceStatus, [student.id]: 'Late' });
                           setAttendanceComments({ ...attendanceComments, [student.id]: '' });
                         }}
-                        className={attendanceStatus[student.id] === 'Absent' 
-                          ? 'bg-red-600 hover:bg-red-700 text-white' 
+                        className={`text-xs px-2 ${attendanceStatus[student.id] === 'Late' 
+                          ? 'bg-orange-600 hover:bg-orange-700 text-white' 
                           : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-                        }
+                        }`}
                       >
-                        <XCircle className="h-4 w-4 mr-1" />
-                        Absent
+                        <Clock className="h-3 w-3 mr-1" />
+                        Late
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() => setAttendanceStatus({ ...attendanceStatus, [student.id]: 'Absent with Reason' })}
-                        className={attendanceStatus[student.id] === 'Absent with Reason' 
-                          ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
+                        onClick={() => {
+                          // When clicking Absent, show the reason field
+                          setAttendanceStatus({ ...attendanceStatus, [student.id]: 'Absent' });
+                        }}
+                        className={`text-xs px-2 ${(attendanceStatus[student.id] === 'Absent' || attendanceStatus[student.id] === 'Absent with Reason')
+                          ? 'bg-red-600 hover:bg-red-700 text-white' 
                           : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-                        }
+                        }`}
                       >
-                        <XCircle className="h-4 w-4 mr-1" />
-                        Absent (Reason)
+                        <XCircle className="h-3 w-3 mr-1" />
+                        Absent
                       </Button>
                     </div>
                   </div>
                   
-                  {/* Comment field for Absent with Reason */}
-                  {attendanceStatus[student.id] === 'Absent with Reason' && (
-                    <div className="mt-2">
+                  {/* Reason field for Absent - Optional */}
+                  {(attendanceStatus[student.id] === 'Absent' || attendanceStatus[student.id] === 'Absent with Reason') && (
+                    <div className="mt-2 space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <span>Did the student inform you?</span>
+                      </div>
                       <textarea
-                        placeholder="Enter reason for absence..."
+                        placeholder="Optional: Add reason if student informed (e.g., Medical appointment, Family emergency). Leave empty if student didn't inform."
                         value={attendanceComments[student.id] || ''}
-                        onChange={(e) => setAttendanceComments({ ...attendanceComments, [student.id]: e.target.value })}
+                        onChange={(e) => {
+                          const comment = e.target.value;
+                          setAttendanceComments({ ...attendanceComments, [student.id]: comment });
+                          // Update status based on whether there's a comment
+                          if (comment.trim()) {
+                            setAttendanceStatus({ ...attendanceStatus, [student.id]: 'Absent with Reason' });
+                          } else {
+                            setAttendanceStatus({ ...attendanceStatus, [student.id]: 'Absent' });
+                          }
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
                         rows={2}
                       />
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        💡 Tip: Adding a reason means the student informed you and won't lose attendance points. Leave empty if they didn't inform.
+                      </p>
                     </div>
                   )}
                 </div>

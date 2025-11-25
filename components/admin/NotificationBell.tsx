@@ -7,19 +7,23 @@ import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
 
 interface NotificationBellProps {
   onNotificationClick?: (notification: Notification) => void;
+  userRole?: 'admin' | 'member';
+  userEmail?: string;
 }
 
-export function NotificationBell({ onNotificationClick }: NotificationBellProps) {
+export function NotificationBell({ onNotificationClick, userRole = 'admin', userEmail }: NotificationBellProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
 
   const loadNotifications = useCallback(async () => {
-    const data = await notificationStore.getAll();
-    const count = await notificationStore.getUnreadCount();
+    // Admin sees all notifications, members see only their own
+    const targetUser = userRole === 'member' ? userEmail : undefined;
+    const data = await notificationStore.getAll(targetUser);
+    const count = await notificationStore.getUnreadCount(targetUser);
     setNotifications(data);
     setUnreadCount(count);
-  }, []);
+  }, [userRole, userEmail]);
 
   useEffect(() => {
     loadNotifications();

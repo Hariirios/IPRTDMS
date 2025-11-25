@@ -7,6 +7,7 @@ import { Label } from '../ui/label';
 import { toast } from 'sonner';
 import { memberStore, Member } from '../../lib/memberStore';
 import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 export function MembersAdmin() {
   const [members, setMembers] = useState<Member[]>([]);
@@ -17,6 +18,8 @@ export function MembersAdmin() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'All' | 'Active' | 'Inactive'>('All');
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -51,16 +54,33 @@ export function MembersAdmin() {
     if (!loading) loadMembers();
   }, [loading, loadMembers]));
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImagePreview(result);
-        setFormData({ ...formData, image: result });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    try {
+      // Import the image utility
+      const { handleImageUpload: processImage } = await import('../../lib/imageUtils');
+      
+      // Show loading toast
+      const loadingToast = toast.loading('Processing image with ULTRA HIGH quality...');
+      
+      // Process image with 100% quality - NO compression for maximum clarity
+      const compressedImage = await processImage(file, {
+        maxWidth: 2000,  // ULTRA high resolution
+        maxHeight: 2000, // ULTRA high resolution
+        quality: 1.0,    // 100% quality - NO compression!
+        outputFormat: file.type.includes('png') ? 'image/png' : 'image/jpeg'
+      });
+      
+      setImagePreview(compressedImage);
+      setFormData({ ...formData, image: compressedImage });
+      
+      toast.dismiss(loadingToast);
+      toast.success('✨ ULTRA HIGH quality image uploaded!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload image');
+      console.error('Image upload error:', error);
     }
   };
 
@@ -113,16 +133,22 @@ export function MembersAdmin() {
     setIsViewModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this member? They will no longer be able to login.')) {
-      try {
-        await memberStore.delete(id);
-        await loadMembers();
-        toast.success('Member deleted successfully!');
-      } catch (error) {
-        toast.error('Failed to delete member.');
-        console.error(error);
-      }
+  const handleDelete = (member: Member) => {
+    setMemberToDelete(member);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!memberToDelete) return;
+    
+    try {
+      await memberStore.delete(memberToDelete.id);
+      await loadMembers();
+      toast.success('Member deleted successfully!');
+      setMemberToDelete(null);
+    } catch (error) {
+      toast.error('Failed to delete member.');
+      console.error(error);
     }
   };
 
@@ -304,7 +330,7 @@ export function MembersAdmin() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDelete(member.id)}
+                  onClick={() => handleDelete(member)}
                   className="text-red-600 hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -505,6 +531,18 @@ export function MembersAdmin() {
           </motion.div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Member?"
+        message={`Are you sure you want to delete ${memberToDelete?.name}? They will no longer be able to login and this cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

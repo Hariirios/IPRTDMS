@@ -24,6 +24,43 @@ export default function Technicians() {
     loadTechnicians();
   }, []);
 
+  // Filter technicians based on active filter and role
+  const filteredTechnicians = technicians.filter((technician) => {
+    if (activeFilter === 'All Team') {
+      return true; // Show all technicians
+    }
+    
+    // Filter by role - check if role contains the filter keyword
+    const role = technician.role.toLowerCase();
+    const filter = activeFilter.toLowerCase();
+    
+    if (activeFilter === 'Leadership') {
+      // Match roles like: Director, Manager, Lead, Chief, Head, Supervisor
+      return role.includes('director') || 
+             role.includes('manager') || 
+             role.includes('lead') || 
+             role.includes('chief') || 
+             role.includes('head') || 
+             role.includes('supervisor');
+    }
+    
+    if (activeFilter === 'Developers') {
+      // Match roles like: Developer, Engineer, Programmer, Coder
+      return role.includes('developer') || 
+             role.includes('engineer') || 
+             role.includes('programmer') || 
+             role.includes('coder') ||
+             role.includes('software') ||
+             role.includes('web') ||
+             role.includes('frontend') ||
+             role.includes('backend') ||
+             role.includes('fullstack') ||
+             role.includes('full stack');
+    }
+    
+    return false;
+  });
+
   const services = [
     {
       icon: Server,
@@ -141,9 +178,15 @@ export default function Technicians() {
                 No technicians added yet. Please check back later.
               </p>
             </div>
+          ) : filteredTechnicians.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                No technicians found in the "{activeFilter}" category.
+              </p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-              {technicians.map((technician, index) => (
+              {filteredTechnicians.map((technician, index) => (
                 <motion.div
                   key={technician.id}
                   initial={{ opacity: 0, y: 30 }}

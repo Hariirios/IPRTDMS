@@ -7,6 +7,7 @@ import { Label } from '../ui/label';
 import { toast } from 'sonner';
 import { studentStore, Student } from '../../lib/studentStore';
 import { deletionRequestStore } from '../../lib/deletionRequestStore';
+import { memberStore } from '../../lib/memberStore';
 import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
 
 export function MemberStudents() {
@@ -29,8 +30,34 @@ export function MemberStudents() {
   });
 
   const loadStudents = useCallback(async () => {
-    const data = await studentStore.getAll();
-    setStudents(data);
+    const currentMemberId = localStorage.getItem('currentMemberId');
+    
+    if (!currentMemberId) {
+      setStudents([]);
+      return;
+    }
+
+    try {
+      // Get member's assigned projects
+      const member = await memberStore.getById(currentMemberId);
+      if (!member || !member.assignedProjects || member.assignedProjects.length === 0) {
+        setStudents([]);
+        return;
+      }
+
+      // Get all students
+      const allStudents = await studentStore.getAll();
+      
+      // Filter to show only students in member's assigned projects
+      const memberStudents = allStudents.filter(student =>
+        student.projects?.some(p => member.assignedProjects.includes(p.projectId))
+      );
+      
+      setStudents(memberStudents);
+    } catch (error) {
+      console.error('Error loading students:', error);
+      setStudents([]);
+    }
   }, []);
 
   // Load students on mount
@@ -287,9 +314,13 @@ export function MemberStudents() {
                   id="enrollmentDate"
                   type="date"
                   value={formData.enrollmentDate}
+                  max={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setFormData({ ...formData, enrollmentDate: e.target.value })}
                   required
                 />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Cannot select future dates
+                </p>
               </div>
 
               <div>

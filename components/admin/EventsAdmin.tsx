@@ -128,14 +128,32 @@ export function EventsAdmin() {
         setSpeakers(newSpeakers);
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        try {
+            // Import the image utility
+            const { handleImageUpload: processImage } = await import('../../lib/imageUtils');
+            
+            // Show loading toast
+            const loadingToast = toast.loading('Processing image with ULTRA HIGH quality...');
+            
+            // Process image with 100% quality - NO compression for maximum clarity
+            const compressedImage = await processImage(file, {
+                maxWidth: 2400,  // ULTRA high resolution for event banners
+                maxHeight: 1800, // ULTRA high resolution for event banners
+                quality: 1.0,    // 100% quality - NO compression!
+                outputFormat: 'image/jpeg'
+            });
+            
+            setImagePreview(compressedImage);
+            
+            toast.dismiss(loadingToast);
+            toast.success('✨ ULTRA HIGH quality event image uploaded!');
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to upload image');
+            console.error('Image upload error:', error);
         }
     };
 

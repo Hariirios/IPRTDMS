@@ -7,6 +7,8 @@ import { Label } from '../ui/label';
 import { toast } from 'sonner';
 import { studentStore, Student } from '../../lib/studentStore';
 import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
+import { DeleteWithReasonDialog } from '../ui/DeleteWithReasonDialog';
+import { notificationStore } from '../../lib/notificationStore';
 
 export function StudentsAdmin() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -29,6 +31,8 @@ export function StudentsAdmin() {
   const [viewingStudent, setViewingStudent] = useState<Student | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterAddedBy, setFilterAddedBy] = useState<'All' | 'admin' | 'member'>('All');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -80,16 +84,35 @@ export function StudentsAdmin() {
     setIsViewModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this student? This will remove them from all projects.')) {
-      try {
-        await studentStore.delete(id);
-        await loadStudents();
-        toast.success('Student deleted successfully!');
-      } catch (error) {
-        toast.error('Failed to delete student. Please try again.');
-        console.error(error);
+  const handleDelete = (student: Student) => {
+    setStudentToDelete(student);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async (reason: string) => {
+    if (!studentToDelete) return;
+    
+    try {
+      await studentStore.delete(studentToDelete.id);
+      
+      // Notify member if student was added by them
+      if (studentToDelete.addedBy === 'member') {
+        await notificationStore.add({
+          type: 'student',
+          title: '🗑️ Student Deleted by Admin',
+          message: `Admin deleted student: ${studentToDelete.fullName}.\n\nReason: ${reason}\n\nThe student has been removed from all projects.`,
+          relatedId: studentToDelete.id,
+          createdBy: 'admin@iprt.edu',
+          targetUser: studentToDelete.addedByEmail // Only the member who added it should see this
+        });
       }
+      
+      await loadStudents();
+      toast.success('Student deleted successfully!');
+      setStudentToDelete(null);
+    } catch (error) {
+      toast.error('Failed to delete student. Please try again.');
+      console.error(error);
     }
   };
 
@@ -237,7 +260,7 @@ export function StudentsAdmin() {
                       <Button variant="outline" size="sm" onClick={() => handleEdit(student)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleDelete(student.id)} className="text-red-600">
+                      <Button variant="outline" size="sm" onClick={() => handleDelete(student)} className="text-red-600">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -385,9 +408,13 @@ export function StudentsAdmin() {
                   id="enrollmentDate"
                   type="date"
                   value={formData.enrollmentDate}
+                  max={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setFormData({ ...formData, enrollmentDate: e.target.value })}
                   required
                 />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Cannot select future dates
+                </p>
               </div>
 
               <div>
@@ -417,6 +444,20 @@ export function StudentsAdmin() {
           </motion.div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog with Reason */}
+      <DeleteWithReasonDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Student?"
+        message="Please provide a reason for deleting this student. The member who added this student will be notified."
+        itemName={studentToDelete?.fullName}
+        reasonLabel="Reason for deletion *"
+        reasonPlaceholder="e.g., Student withdrew from program, Duplicate entry, etc."
+        confirmText="Delete Student"
+        cancelText="Cancel"
+      />
     </div>
   );
 }

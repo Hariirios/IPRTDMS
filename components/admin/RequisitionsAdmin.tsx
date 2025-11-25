@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { Plus, FileText, Check, X, Clock, Eye, Search } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -6,22 +6,8 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { toast } from 'sonner';
 import { notificationStore } from '../../lib/notificationStore';
-
-interface Requisition {
-  id: string;
-  title: string;
-  description: string;
-  category: 'Equipment' | 'Supplies' | 'Services' | 'Other';
-  quantity: number;
-  estimatedCost: string;
-  priority: 'Low' | 'Medium' | 'High';
-  status: 'Pending' | 'Approved' | 'Rejected';
-  submittedBy: string;
-  submittedDate: string;
-  reviewedBy?: string;
-  reviewedDate?: string;
-  reviewNotes?: string;
-}
+import { requisitionStore, type Requisition } from '../../lib/requisitionStore';
+import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
 
 interface RequisitionsAdminProps {
   userRole?: 'admin' | 'member';
@@ -34,106 +20,156 @@ export function RequisitionsAdmin({ userRole = 'admin' }: RequisitionsAdminProps
   const [viewingRequisition, setViewingRequisition] = useState<Requisition | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'All' | 'Pending' | 'Approved' | 'Rejected'>('All');
+  const [isLoading, setIsLoading] = useState(true);
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: 'Equipment' as 'Equipment' | 'Supplies' | 'Services' | 'Other',
     quantity: 1,
-    estimatedCost: '',
+    estimated_cost: '',
     priority: 'Medium' as 'Low' | 'Medium' | 'High'
   });
 
   const [reviewNotes, setReviewNotes] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Load requisitions from database
+  const loadRequisitions = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await requisitionStore.getAll();
+      setRequisitions(data);
+    } catch (error) {
+      console.error('Error loading requisitions:', error);
+      toast.error('Failed to load requisitions');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Load on mount
+  useEffect(() => {
+    loadRequisitions();
+  }, [loadRequisitions]);
+
+  // Real-time subscription
+  useRealtimeSubscription('requisitions', loadRequisitions);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newRequisition: Requisition = {
-      ...formData,
-      id: Date.now().toString(),
-      status: 'Pending',
-      submittedBy: userRole === 'admin' ? 'admin@iprt.edu' : 'member@iprt.edu',
-      submittedDate: new Date().toISOString().split('T')[0]
-    };
-    
-    setRequisitions([newRequisition, ...requisitions]);
-    
-    // Create notification for admin if submitted by member
-    if (userRole === 'member') {
-      notificationStore.add({
-        type: 'requisition',
-        title: 'New Requisition Request',
-        message: `${newRequisition.submittedBy} submitted a requisition for ${newRequisition.title}`,
-        relatedId: newRequisition.id,
-        createdBy: newRequisition.submittedBy
+    try {
+      const submittedBy = userRole === 'admin' ? 'admin@iprt.edu' : 'member@iprt.edu';
+      
+      const newRequisition = await requisitionStore.add({
+        ...formData,
+        status: 'Pending',
+        submitted_by: submittedBy,
+        submitted_date: new Date().toISOString().split('T')[0]
       });
-      toast.success('🔔 Requisition submitted! Admin has been notified.');
-    } else {
-      toast.success('Requisition submitted successfully!');
+      
+      // Create notification for admin if submitted by member
+      if (userRole === 'member') {
+        await notificationStore.add({
+          type: 'requisition',
+          title: 'New Requisition Request',
+          message: `${submittedBy} submitted a requisition for ${newRequisition.title}`,
+          relatedId: newRequisition.id,
+          createdBy: submittedBy,
+          targetUser: 'admin' // Only admin should see this
+        });
+        toast.success('🔔 Requisition submitted! Admin has been notified.');
+      } else {
+        toast.success('Requisition submitted successfully!');
+      }
+      
+      handleCloseModal();
+      await loadRequisitions();
+    } catch (error) {
+      console.error('Error submitting requisition:', error);
+      toast.error('Failed to submit requisition');
     }
-    
-    handleCloseModal();
   };
 
-  const handleApprove = (id: string) => {
-    setRequisitions(requisitions.map(r =>
-      r.id === id
-        ? {
-            ...r,
-            status: 'Approved',
-            reviewedBy: 'admin@iprt.edu',
-            reviewedDate: new Date().toISOString().split('T')[0],
-            reviewNotes
-          }
-        : r
-    ));
-    toast.success('Requisition approved!');
-    setReviewNotes('');
-    setIsViewModalOpen(false);
+  const handleApprove = async (id: string) => {
+    try {
+      const requisition = await requisitionStore.approve(id, 'admin@iprt.edu', reviewNotes);
+      
+      // Send notification to member
+      await notificationStore.add({
+        type: 'requisition',
+        title: '✅ Requisition Approved',
+        message: `Your requisition "${requisition.title}" has been approved${reviewNotes ? ': ' + reviewNotes : ''}`,
+        relatedId: requisition.id,
+        createdBy: 'admin@iprt.edu',
+        targetUser: requisition.submitted_by // Only the submitter should see this
+      });
+      
+      toast.success('Requisition approved! Member has been notified.');
+      setReviewNotes('');
+      setIsViewModalOpen(false);
+      await loadRequisitions();
+    } catch (error) {
+      console.error('Error approving requisition:', error);
+      toast.error('Failed to approve requisition');
+    }
   };
 
-  const handleReject = (id: string) => {
+  const handleReject = async (id: string) => {
     if (!reviewNotes.trim()) {
       toast.error('Please provide a reason for rejection');
       return;
     }
     
-    setRequisitions(requisitions.map(r =>
-      r.id === id
-        ? {
-            ...r,
-            status: 'Rejected',
-            reviewedBy: 'admin@iprt.edu',
-            reviewedDate: new Date().toISOString().split('T')[0],
-            reviewNotes
-          }
-        : r
-    ));
-    toast.success('Requisition rejected');
-    setReviewNotes('');
-    setIsViewModalOpen(false);
+    try {
+      const requisition = await requisitionStore.reject(id, 'admin@iprt.edu', reviewNotes);
+      
+      // Send notification to member
+      await notificationStore.add({
+        type: 'requisition',
+        title: '❌ Requisition Rejected',
+        message: `Your requisition "${requisition.title}" has been rejected. Reason: ${reviewNotes}`,
+        relatedId: requisition.id,
+        createdBy: 'admin@iprt.edu',
+        targetUser: requisition.submitted_by // Only the submitter should see this
+      });
+      
+      toast.success('Requisition rejected. Member has been notified.');
+      setReviewNotes('');
+      setIsViewModalOpen(false);
+      await loadRequisitions();
+    } catch (error) {
+      console.error('Error rejecting requisition:', error);
+      toast.error('Failed to reject requisition');
+    }
   };
 
-  const handleSetPending = (id: string) => {
-    setRequisitions(requisitions.map(r =>
-      r.id === id
-        ? {
-            ...r,
-            status: 'Pending',
-            reviewedBy: undefined,
-            reviewedDate: undefined,
-            reviewNotes: undefined
-          }
-        : r
-    ));
-    toast.success('Requisition set to pending');
-    setIsViewModalOpen(false);
+  const handleSetPending = async (id: string) => {
+    try {
+      const requisition = await requisitionStore.setPending(id);
+      
+      // Send notification to member
+      await notificationStore.add({
+        type: 'requisition',
+        title: '⏳ Requisition Under Review',
+        message: `Your requisition "${requisition.title}" is now under review again`,
+        relatedId: requisition.id,
+        createdBy: 'admin@iprt.edu',
+        targetUser: requisition.submitted_by // Only the submitter should see this
+      });
+      
+      toast.success('Requisition set to pending. Member has been notified.');
+      setIsViewModalOpen(false);
+      await loadRequisitions();
+    } catch (error) {
+      console.error('Error setting requisition to pending:', error);
+      toast.error('Failed to update requisition');
+    }
   };
 
   const handleView = (requisition: Requisition) => {
     setViewingRequisition(requisition);
-    setReviewNotes(requisition.reviewNotes || '');
+    setReviewNotes(requisition.review_notes || '');
     setIsViewModalOpen(true);
   };
 
@@ -144,7 +180,7 @@ export function RequisitionsAdmin({ userRole = 'admin' }: RequisitionsAdminProps
       description: '',
       category: 'Equipment',
       quantity: 1,
-      estimatedCost: '',
+      estimated_cost: '',
       priority: 'Medium'
     });
   };
@@ -156,7 +192,7 @@ export function RequisitionsAdmin({ userRole = 'admin' }: RequisitionsAdminProps
     
     // Members only see their own requisitions
     if (userRole === 'member') {
-      return matchesSearch && matchesFilter && req.submittedBy === 'member@iprt.edu';
+      return matchesSearch && matchesFilter && req.submitted_by === 'member@iprt.edu';
     }
     
     return matchesSearch && matchesFilter;
@@ -272,10 +308,15 @@ export function RequisitionsAdmin({ userRole = 'admin' }: RequisitionsAdminProps
 
       {/* Requisitions List */}
       <div className="space-y-4">
-        {filteredRequisitions.length === 0 ? (
+        {isLoading ? (
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-12 shadow-lg text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3B0764] mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading requisitions...</p>
+          </div>
+        ) : filteredRequisitions.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-xl p-12 shadow-lg text-center">
             <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-600 dark:text-gray-400">No requisitions found. Create your first requisition!</p>
+            <p className="text-gray-600 dark:text-gray-400">No requisitions found. {userRole === 'member' ? 'Create your first requisition!' : 'No requisitions submitted yet.'}</p>
           </div>
         ) : (
           filteredRequisitions.map((req, index) => (
@@ -302,9 +343,9 @@ export function RequisitionsAdmin({ userRole = 'admin' }: RequisitionsAdminProps
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
                       <span>Category: {req.category}</span>
                       <span>Quantity: {req.quantity}</span>
-                      <span>Cost: ${req.estimatedCost}</span>
-                      <span>Submitted: {req.submittedDate}</span>
-                      {req.reviewedDate && <span>Reviewed: {req.reviewedDate}</span>}
+                      <span>Cost: ${req.estimated_cost}</span>
+                      <span>Submitted: {req.submitted_date}</span>
+                      {req.reviewed_date && <span>Reviewed: {req.reviewed_date}</span>}
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -320,7 +361,7 @@ export function RequisitionsAdmin({ userRole = 'admin' }: RequisitionsAdminProps
                 </div>
 
                 {/* Show review notes for rejected/approved requisitions */}
-                {req.reviewNotes && (req.status === 'Rejected' || req.status === 'Approved') && (
+                {req.review_notes && (req.status === 'Rejected' || req.status === 'Approved') && (
                   <div className={`p-3 rounded-lg border-l-4 ${
                     req.status === 'Rejected' 
                       ? 'bg-red-50 dark:bg-red-900/20 border-red-500' 
@@ -338,10 +379,10 @@ export function RequisitionsAdmin({ userRole = 'admin' }: RequisitionsAdminProps
                         ? 'text-red-800 dark:text-red-300' 
                         : 'text-green-800 dark:text-green-300'
                     }`}>
-                      {req.reviewNotes}
+                      {req.review_notes}
                     </p>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      Reviewed by {req.reviewedBy} on {req.reviewedDate}
+                      Reviewed by {req.reviewed_by} on {req.reviewed_date}
                     </p>
                   </div>
                 )}
@@ -435,13 +476,13 @@ export function RequisitionsAdmin({ userRole = 'admin' }: RequisitionsAdminProps
                 </div>
 
                 <div>
-                  <Label htmlFor="estimatedCost">Estimated Cost ($) *</Label>
+                  <Label htmlFor="estimated_cost">Estimated Cost ($) *</Label>
                   <Input
-                    id="estimatedCost"
+                    id="estimated_cost"
                     type="number"
                     step="0.01"
-                    value={formData.estimatedCost}
-                    onChange={(e) => setFormData({ ...formData, estimatedCost: e.target.value })}
+                    value={formData.estimated_cost}
+                    onChange={(e) => setFormData({ ...formData, estimated_cost: e.target.value })}
                     placeholder="0.00"
                     required
                   />
@@ -501,7 +542,7 @@ export function RequisitionsAdmin({ userRole = 'admin' }: RequisitionsAdminProps
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Estimated Cost</p>
-                  <p className="font-semibold text-gray-900 dark:text-white">${viewingRequisition.estimatedCost}</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">${viewingRequisition.estimated_cost}</p>
                 </div>
               </div>
 
@@ -517,28 +558,28 @@ export function RequisitionsAdmin({ userRole = 'admin' }: RequisitionsAdminProps
 
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Submitted By</p>
-                <p className="font-semibold text-gray-900 dark:text-white">{viewingRequisition.submittedBy}</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{viewingRequisition.submitted_by}</p>
               </div>
 
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Submitted Date</p>
-                <p className="font-semibold text-gray-900 dark:text-white">{viewingRequisition.submittedDate}</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{viewingRequisition.submitted_date}</p>
               </div>
 
-              {viewingRequisition.reviewedBy && (
+              {viewingRequisition.reviewed_by && (
                 <>
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Reviewed By</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{viewingRequisition.reviewedBy}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{viewingRequisition.reviewed_by}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Reviewed Date</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{viewingRequisition.reviewedDate}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{viewingRequisition.reviewed_date}</p>
                   </div>
                 </>
               )}
 
-              {viewingRequisition.reviewNotes && (
+              {viewingRequisition.review_notes && (
                 <div className={`p-4 rounded-lg border-l-4 ${
                   viewingRequisition.status === 'Rejected' 
                     ? 'bg-red-50 dark:bg-red-900/20 border-red-500' 
@@ -564,7 +605,7 @@ export function RequisitionsAdmin({ userRole = 'admin' }: RequisitionsAdminProps
                       ? 'text-green-800 dark:text-green-300'
                       : 'text-gray-800 dark:text-gray-300'
                   }`}>
-                    {viewingRequisition.reviewNotes}
+                    {viewingRequisition.review_notes}
                   </p>
                 </div>
               )}

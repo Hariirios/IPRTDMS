@@ -145,7 +145,8 @@ export const deletionRequestStore = {
         title: 'New Student Deletion Request',
         message: `${request.requestedByEmail} requested to delete student: ${request.studentName}`,
         relatedId: newRequest.id,
-        createdBy: request.requestedByEmail
+        createdBy: request.requestedByEmail,
+        targetUser: 'admin' // Only admin should see this
       });
       
       return newRequest;

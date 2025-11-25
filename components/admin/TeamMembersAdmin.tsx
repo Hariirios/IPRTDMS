@@ -50,16 +50,33 @@ export function TeamMembersAdmin() {
     status: 'Active' as 'Active' | 'Inactive'
   });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImagePreview(result);
-        setFormData({ ...formData, image: result });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    try {
+      // Import the image utility
+      const { handleImageUpload: processImage } = await import('../../lib/imageUtils');
+      
+      // Show loading toast
+      const loadingToast = toast.loading('Processing image with ULTRA HIGH quality...');
+      
+      // Process image with 100% quality - NO compression for maximum clarity
+      const compressedImage = await processImage(file, {
+        maxWidth: 2000,  // ULTRA high resolution
+        maxHeight: 2000, // ULTRA high resolution
+        quality: 1.0,    // 100% quality - NO compression!
+        outputFormat: file.type.includes('png') ? 'image/png' : 'image/jpeg'
+      });
+      
+      setImagePreview(compressedImage);
+      setFormData({ ...formData, image: compressedImage });
+      
+      toast.dismiss(loadingToast);
+      toast.success('✨ ULTRA HIGH quality image uploaded!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload image');
+      console.error('Image upload error:', error);
     }
   };
 
@@ -469,9 +486,13 @@ export function TeamMembersAdmin() {
                     id="joinDate"
                     type="date"
                     value={formData.joinDate}
+                    max={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
                     required
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Cannot select future dates
+                  </p>
                 </div>
 
                 <div>

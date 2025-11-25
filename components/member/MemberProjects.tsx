@@ -439,9 +439,13 @@ export function MemberProjects() {
                     id="enrollmentDate"
                     type="date"
                     value={newStudentForm.enrollmentDate}
+                    max={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setNewStudentForm({ ...newStudentForm, enrollmentDate: e.target.value })}
                     required
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Cannot select future dates
+                  </p>
                 </div>
 
                 <div className="flex gap-3 pt-4">

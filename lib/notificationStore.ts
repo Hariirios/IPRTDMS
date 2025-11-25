@@ -10,15 +10,23 @@ export interface Notification {
   isRead: boolean;
   createdAt: string;
   createdBy: string;
+  targetUser?: string; // Email of target user (admin or specific member)
 }
 
 export const notificationStore = {
-  getAll: async () => {
+  getAll: async (targetUser?: string) => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('notifications')
         .select('*')
         .order('created_at', { ascending: false });
+
+      // Filter by target user if provided
+      if (targetUser) {
+        query = query.or(`target_user.eq.${targetUser},target_user.is.null`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -30,7 +38,8 @@ export const notificationStore = {
         relatedId: n.related_id,
         isRead: n.is_read,
         createdAt: n.created_at,
-        createdBy: n.created_by
+        createdBy: n.created_by,
+        targetUser: n.target_user
       }));
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -38,13 +47,20 @@ export const notificationStore = {
     }
   },
   
-  getUnread: async () => {
+  getUnread: async (targetUser?: string) => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('notifications')
         .select('*')
         .eq('is_read', false)
         .order('created_at', { ascending: false });
+
+      // Filter by target user if provided
+      if (targetUser) {
+        query = query.or(`target_user.eq.${targetUser},target_user.is.null`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -56,7 +72,8 @@ export const notificationStore = {
         relatedId: n.related_id,
         isRead: n.is_read,
         createdAt: n.created_at,
-        createdBy: n.created_by
+        createdBy: n.created_by,
+        targetUser: n.target_user
       }));
     } catch (error) {
       console.error('Error fetching unread notifications:', error);
@@ -64,12 +81,19 @@ export const notificationStore = {
     }
   },
   
-  getUnreadCount: async () => {
+  getUnreadCount: async (targetUser?: string) => {
     try {
-      const { count, error } = await supabase
+      let query = supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('is_read', false);
+
+      // Filter by target user if provided
+      if (targetUser) {
+        query = query.or(`target_user.eq.${targetUser},target_user.is.null`);
+      }
+
+      const { count, error } = await query;
 
       if (error) throw error;
       return count || 0;
@@ -116,7 +140,8 @@ export const notificationStore = {
           message: notification.message,
           related_id: notification.relatedId,
           is_read: false,
-          created_by: notification.createdBy
+          created_by: notification.createdBy,
+          target_user: notification.targetUser || 'admin'
         })
         .select()
         .single();

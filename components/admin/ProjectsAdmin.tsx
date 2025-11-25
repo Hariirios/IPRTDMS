@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { projectStore, Project } from '../../lib/projectStore';
 import { memberStore, Member } from '../../lib/memberStore';
 import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 export function ProjectsAdmin() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -18,6 +19,8 @@ export function ProjectsAdmin() {
   const [assigningProject, setAssigningProject] = useState<Project | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'All' | 'Active' | 'Completed' | 'On Hold'>('All');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -68,6 +71,17 @@ export function ProjectsAdmin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate end date is after start date
+    if (formData.endDate && formData.startDate) {
+      const startDate = new Date(formData.startDate);
+      const endDate = new Date(formData.endDate);
+      
+      if (endDate < startDate) {
+        toast.error('End date must be after start date');
+        return;
+      }
+    }
+    
     try {
       if (editingProject) {
         await projectStore.update(editingProject.id, formData);
@@ -91,16 +105,22 @@ export function ProjectsAdmin() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this project?')) {
-      try {
-        await projectStore.delete(id);
-        await loadProjects();
-        toast.success('Project deleted successfully!');
-      } catch (error) {
-        toast.error('Failed to delete project.');
-        console.error(error);
-      }
+  const handleDelete = (project: Project) => {
+    setProjectToDelete(project);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!projectToDelete) return;
+    
+    try {
+      await projectStore.delete(projectToDelete.id);
+      await loadProjects();
+      toast.success('Project deleted successfully!');
+      setProjectToDelete(null);
+    } catch (error) {
+      toast.error('Failed to delete project.');
+      console.error(error);
     }
   };
 
@@ -336,7 +356,7 @@ export function ProjectsAdmin() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDelete(project.id)}
+                    onClick={() => handleDelete(project)}
                     className="text-red-600 hover:text-red-700"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -514,9 +534,13 @@ export function ProjectsAdmin() {
                     id="startDate"
                     type="date"
                     value={formData.startDate}
+                    min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                     required
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Cannot select past dates
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="endDate">End Date</Label>
@@ -524,8 +548,18 @@ export function ProjectsAdmin() {
                     id="endDate"
                     type="date"
                     value={formData.endDate}
+                    min={formData.startDate || new Date().toISOString().split('T')[0]}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                   />
+                  {formData.startDate ? (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Must be after {formData.startDate}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Cannot select past dates
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -548,6 +582,18 @@ export function ProjectsAdmin() {
           </motion.div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Project?"
+        message={`Are you sure you want to delete "${projectToDelete?.name}"? All associated data will be removed and this cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

@@ -17,6 +17,7 @@ import { MemberProjects } from '../components/member/MemberProjects';
 import { MemberAttendance } from '../components/member/MemberAttendance';
 import { MemberStudents } from '../components/member/MemberStudents';
 import { MemberDashboardHome } from '../components/member/MemberDashboardHome';
+import { MemberProfile } from '../components/member/MemberProfile';
 import { Lock, Eye, EyeOff, LogOut, Moon, Sun, Globe } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -564,7 +565,11 @@ export default function Admin() {
                 <p className="text-sm text-gray-600 dark:text-gray-400">Institute for Practical Research & Training</p>
               </div>
               <div className="flex items-center gap-3">
-                <NotificationBell onNotificationClick={handleNotificationClick} />
+                <NotificationBell 
+                  userRole="admin" 
+                  userEmail="admin@iprt.edu"
+                  onNotificationClick={handleNotificationClick} 
+                />
                 
                 {/* Language Selector */}
                 <div className="relative">
@@ -697,7 +702,11 @@ export default function Admin() {
             </div>
             <div className="flex items-center gap-3">
               {/* Notification Bell for Members */}
-              <NotificationBell onNotificationClick={handleNotificationClick} />
+              <NotificationBell 
+                userRole="member" 
+                userEmail={localStorage.getItem('currentMemberEmail') || 'member@iprt.edu'}
+                onNotificationClick={handleNotificationClick} 
+              />
               
               {/* Language Selector */}
               <div className="relative">
@@ -765,6 +774,7 @@ export default function Admin() {
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="requisitions">Requisitions</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -785,6 +795,10 @@ export default function Admin() {
 
           <TabsContent value="requisitions">
             <RequisitionsAdmin userRole="member" />
+          </TabsContent>
+
+          <TabsContent value="profile">
+            <MemberProfile />
           </TabsContent>
         </Tabs>
       </div>
