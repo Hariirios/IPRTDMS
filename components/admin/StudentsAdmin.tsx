@@ -1,26 +1,33 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Edit, Trash2, Search, Eye, FolderOpen, User } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Eye, FolderOpen } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { toast } from 'sonner';
 import { studentStore, Student } from '../../lib/studentStore';
+import { projectStore, Project } from '../../lib/projectStore';
 import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
 import { DeleteWithReasonDialog } from '../ui/DeleteWithReasonDialog';
-import { notificationStore } from '../../lib/notificationStore';
 
 export function StudentsAdmin() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   
   const loadStudents = useCallback(async () => {
     const data = await studentStore.getAll();
     setStudents(data);
   }, []);
 
+  const loadProjects = useCallback(async () => {
+    const data = await projectStore.getAll();
+    setProjects(data);
+  }, []);
+
   useEffect(() => {
     loadStudents();
-  }, [loadStudents]);
+    loadProjects();
+  }, [loadStudents, loadProjects]);
 
   // Real-time subscription for auto-reload
   useRealtimeSubscription('students', loadStudents);
@@ -30,7 +37,6 @@ export function StudentsAdmin() {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [viewingStudent, setViewingStudent] = useState<Student | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterAddedBy, setFilterAddedBy] = useState<'All' | 'admin' | 'member'>('All');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   
@@ -39,24 +45,53 @@ export function StudentsAdmin() {
     email: '',
     phone: '',
     enrollmentDate: '',
-    status: 'Active' as 'Active' | 'Completed' | 'Dropped'
+    status: 'Active' as 'Active' | 'Completed' | 'Dropped',
+    projectId: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate project selection for new students
+    if (!editingStudent && !formData.projectId) {
+      toast.error('Please select a project for the student');
+      return;
+    }
+    
     try {
       if (editingStudent) {
-        await studentStore.update(editingStudent.id, formData);
+        await studentStore.update(editingStudent.id, {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          enrollmentDate: formData.enrollmentDate,
+          status: formData.status
+        });
         toast.success('Student updated successfully!');
       } else {
-        await studentStore.add({
-          ...formData,
+        // Add new student
+        const newStudent = await studentStore.add({
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          enrollmentDate: formData.enrollmentDate,
+          status: formData.status,
           addedBy: 'admin',
           addedByEmail: 'admin@iprt.edu',
           projects: []
         });
-        toast.success('Student added successfully!');
+
+        // Assign to project
+        const selectedProject = projects.find(p => p.id === formData.projectId);
+        if (selectedProject) {
+          await studentStore.addProjectToStudent(
+            newStudent.id,
+            formData.projectId,
+            selectedProject.name
+          );
+        }
+        
+        toast.success('Student added and assigned to project successfully!');
       }
       
       await loadStudents();
@@ -95,17 +130,7 @@ export function StudentsAdmin() {
     try {
       await studentStore.delete(studentToDelete.id);
       
-      // Notify member if student was added by them
-      if (studentToDelete.addedBy === 'member') {
-        await notificationStore.add({
-          type: 'student',
-          title: '🗑️ Student Deleted by Admin',
-          message: `Admin deleted student: ${studentToDelete.fullName}.\n\nReason: ${reason}\n\nThe student has been removed from all projects.`,
-          relatedId: studentToDelete.id,
-          createdBy: 'admin@iprt.edu',
-          targetUser: studentToDelete.addedByEmail // Only the member who added it should see this
-        });
-      }
+
       
       await loadStudents();
       toast.success('Student deleted successfully!');
@@ -119,14 +144,13 @@ export function StudentsAdmin() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingStudent(null);
-    setFormData({ fullName: '', email: '', phone: '', enrollmentDate: '', status: 'Active' });
+    setFormData({ fullName: '', email: '', phone: '', enrollmentDate: '', status: 'Active', projectId: '' });
   };
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterAddedBy === 'All' || student.addedBy === filterAddedBy;
-    return matchesSearch && matchesFilter;
+    return matchesSearch;
   });
 
   const getStatusColor = (status: string) => {
@@ -140,17 +164,17 @@ export function StudentsAdmin() {
 
   const stats = {
     total: students.length,
-    addedByAdmin: students.filter(s => s.addedBy === 'admin').length,
-    addedByMember: students.filter(s => s.addedBy === 'member').length,
-    active: students.filter(s => s.status === 'Active').length
+    active: students.filter(s => s.status === 'Active').length,
+    completed: students.filter(s => s.status === 'Completed').length,
+    dropped: students.filter(s => s.status === 'Dropped').length
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Students (View Only)</h2>
-          <p className="text-gray-600 dark:text-gray-400">View all students including those added by members</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Students</h2>
+          <p className="text-gray-600 dark:text-gray-400">Manage all students in the system</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} className="bg-[#3B0764] hover:bg-[#2d0550]">
           <Plus className="h-4 w-4 mr-2" />
@@ -164,45 +188,30 @@ export function StudentsAdmin() {
           <p className="text-sm text-gray-600 dark:text-gray-400">Total Students</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
         </div>
-        <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 shadow">
-          <p className="text-sm text-purple-800 dark:text-purple-200">Added by Admin</p>
-          <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.addedByAdmin}</p>
-        </div>
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 shadow">
-          <p className="text-sm text-blue-800 dark:text-blue-200">Added by Members</p>
-          <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.addedByMember}</p>
-        </div>
         <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 shadow">
           <p className="text-sm text-green-800 dark:text-green-200">Active</p>
           <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.active}</p>
         </div>
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 shadow">
+          <p className="text-sm text-blue-800 dark:text-blue-200">Completed</p>
+          <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.completed}</p>
+        </div>
+        <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 shadow">
+          <p className="text-sm text-red-800 dark:text-red-200">Dropped</p>
+          <p className="text-2xl font-bold text-red-900 dark:text-red-100">{stats.dropped}</p>
+        </div>
       </div>
 
-      {/* Search and Filter */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Search students..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <div className="flex gap-2">
-          {(['All', 'admin', 'member'] as const).map((filter) => (
-            <Button
-              key={filter}
-              variant={filterAddedBy === filter ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilterAddedBy(filter)}
-              className={filterAddedBy === filter ? 'bg-[#3B0764] hover:bg-[#2d0550]' : ''}
-            >
-              {filter === 'All' ? 'All' : filter === 'admin' ? 'Admin Added' : 'Member Added'}
-            </Button>
-          ))}
-        </div>
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="Search students..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
@@ -213,7 +222,6 @@ export function StudentsAdmin() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Email</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Phone</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Added By</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Projects</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Actions</th>
             </tr>
@@ -221,7 +229,7 @@ export function StudentsAdmin() {
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {filteredStudents.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-gray-600 dark:text-gray-400">
+                <td colSpan={6} className="px-6 py-12 text-center text-gray-600 dark:text-gray-400">
                   No students found. Add your first student!
                 </td>
               </tr>
@@ -234,16 +242,6 @@ export function StudentsAdmin() {
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(student.status)}`}>
                       {student.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
-                      student.addedBy === 'admin' 
-                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' 
-                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                    }`}>
-                      <User className="h-3 w-3" />
-                      {student.addedBy === 'admin' ? 'Admin' : 'Member'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -308,17 +306,6 @@ export function StudentsAdmin() {
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Enrollment Date</p>
                   <p className="font-semibold text-gray-900 dark:text-white">{viewingStudent.enrollmentDate}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Added By</p>
-                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
-                    viewingStudent.addedBy === 'admin' 
-                      ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' 
-                      : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                  }`}>
-                    <User className="h-3 w-3" />
-                    {viewingStudent.addedBy === 'admin' ? 'Admin' : 'Member'}
-                  </span>
                 </div>
               </div>
 
@@ -408,12 +395,12 @@ export function StudentsAdmin() {
                   id="enrollmentDate"
                   type="date"
                   value={formData.enrollmentDate}
-                  max={new Date().toISOString().split('T')[0]}
+                  min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setFormData({ ...formData, enrollmentDate: e.target.value })}
                   required
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Cannot select future dates
+                  Must be today or a future date
                 </p>
               </div>
 
@@ -423,7 +410,7 @@ export function StudentsAdmin() {
                   id="status"
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
                 >
                   <option value="Active">Active</option>
@@ -431,6 +418,29 @@ export function StudentsAdmin() {
                   <option value="Dropped">Dropped</option>
                 </select>
               </div>
+
+              {!editingStudent && (
+                <div>
+                  <Label htmlFor="projectId">Assign to Project *</Label>
+                  <select
+                    id="projectId"
+                    value={formData.projectId}
+                    onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    required
+                  >
+                    <option value="">Select a project...</option>
+                    {projects.map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.name} ({project.status})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Student will be assigned to this project
+                  </p>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-4">
                 <Button type="submit" className="flex-1 bg-[#3B0764] hover:bg-[#2d0550]">
@@ -451,7 +461,7 @@ export function StudentsAdmin() {
         onClose={() => setDeleteConfirmOpen(false)}
         onConfirm={confirmDelete}
         title="Delete Student?"
-        message="Please provide a reason for deleting this student. The member who added this student will be notified."
+        message="Please provide a reason for deleting this student."
         itemName={studentToDelete?.fullName}
         reasonLabel="Reason for deletion *"
         reasonPlaceholder="e.g., Student withdrew from program, Duplicate entry, etc."

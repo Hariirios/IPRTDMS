@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Eye, Users, Calendar, Search, Trash2, FolderOpen } from 'lucide-react';
+import { Eye, Users, Calendar, Search, Trash2, FolderOpen } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -277,16 +277,6 @@ export function MemberProjects() {
                 </div>
 
                 <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <Button
-                    onClick={() => {
-                      setSelectedProject(project);
-                      setIsAddStudentModalOpen(true);
-                    }}
-                    className="bg-[#3B0764] hover:bg-[#2d0550]"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Student
-                  </Button>
                   <Button
                     variant="outline"
                     onClick={() => {
