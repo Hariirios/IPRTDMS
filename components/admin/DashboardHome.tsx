@@ -1,41 +1,101 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Users, FolderKanban, ClipboardCheck, FileText, TrendingUp, AlertCircle } from 'lucide-react';
+import { studentStore } from '../../lib/studentStore';
+import { projectStore } from '../../lib/projectStore';
+import { attendanceStore } from '../../lib/attendanceStore';
+import { requisitionStore } from '../../lib/requisitionStore';
+import { useRealtimeSubscription } from '../../lib/useRealtimeSubscription';
 
 export function DashboardHome() {
-  const stats = [
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    activeProjects: 0,
+    attendanceRate: 0,
+    pendingRequisitions: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all data in parallel
+      const [students, projects, attendance, requisitions] = await Promise.all([
+        studentStore.getAll(),
+        projectStore.getAll(),
+        attendanceStore.getAll(),
+        requisitionStore.getAll()
+      ]);
+
+      // Calculate stats
+      const totalStudents = students.length;
+      const activeProjects = projects.filter(p => p.status === 'Active').length;
+      const pendingRequisitions = requisitions.filter(r => r.status === 'Pending').length;
+
+      // Calculate attendance rate
+      let attendanceRate = 0;
+      if (attendance.length > 0) {
+        const presentCount = attendance.filter(a => a.status === 'Present' || a.status === 'Late').length;
+        attendanceRate = Math.round((presentCount / attendance.length) * 100);
+      }
+
+      setStats({
+        totalStudents,
+        activeProjects,
+        attendanceRate,
+        pendingRequisitions
+      });
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  // Real-time updates
+  useRealtimeSubscription('students', loadDashboardData);
+  useRealtimeSubscription('projects', loadDashboardData);
+  useRealtimeSubscription('attendance', loadDashboardData);
+  useRealtimeSubscription('requisitions', loadDashboardData);
+
+  const statsDisplay = [
     {
       title: 'Total Students',
-      value: '0',
+      value: loading ? '...' : stats.totalStudents.toString(),
       icon: Users,
       gradient: 'from-blue-600 to-cyan-600',
-      change: '+0%'
+      change: stats.totalStudents > 0 ? `${stats.totalStudents} enrolled` : 'No students yet'
     },
     {
       title: 'Active Projects',
-      value: '0',
+      value: loading ? '...' : stats.activeProjects.toString(),
       icon: FolderKanban,
       gradient: 'from-purple-600 to-pink-600',
-      change: '+0%'
+      change: stats.activeProjects > 0 ? `${stats.activeProjects} ongoing` : 'No active projects'
     },
     {
       title: 'Attendance Rate',
-      value: '0%',
+      value: loading ? '...' : `${stats.attendanceRate}%`,
       icon: ClipboardCheck,
       gradient: 'from-green-600 to-teal-600',
-      change: '+0%'
+      change: stats.attendanceRate >= 80 ? 'Excellent' : stats.attendanceRate >= 60 ? 'Good' : 'Needs improvement'
     },
     {
       title: 'Pending Requisitions',
-      value: '0',
+      value: loading ? '...' : stats.pendingRequisitions.toString(),
       icon: FileText,
       gradient: 'from-orange-600 to-red-600',
-      change: '0'
+      change: stats.pendingRequisitions > 0 ? 'Needs review' : 'All reviewed'
     }
   ];
 
   const recentActivity = [
-    { action: 'No recent activity', time: 'Just now', type: 'info' }
+    { action: 'Dashboard data loaded successfully', time: 'Just now', type: 'info' }
   ];
 
   return (
@@ -52,7 +112,7 @@ export function DashboardHome() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
+        {statsDisplay.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <motion.div
@@ -66,7 +126,7 @@ export function DashboardHome() {
                 <div className={`w-12 h-12 bg-gradient-to-br ${stat.gradient} rounded-lg flex items-center justify-center`}>
                   <Icon className="h-6 w-6 text-white" />
                 </div>
-                <span className="text-sm text-green-600 dark:text-green-400 font-semibold">
+                <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
                   {stat.change}
                 </span>
               </div>
