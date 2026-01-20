@@ -1,18 +1,9 @@
 import { supabase } from './supabase';
-import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 
-// Create admin client with service role for user management
-const supabaseAdmin = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
-    {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false
-        }
-    }
-);
+// Note: Admin user creation has been moved to Supabase Dashboard
+// Service role key should NEVER be used in frontend code
+// This file now only handles authentication, not user creation
 
 export interface AdminUser {
     id: string;
@@ -103,7 +94,9 @@ export const loginAdmin = async (emailOrUsername: string, password: string): Pro
     }
 };
 
-// Create admin user (only super_admin can create)
+// Create admin user - DEPRECATED: Use Supabase Dashboard instead
+// Admin users should be created manually in Supabase Dashboard > Authentication
+// This prevents exposing service role key in frontend
 export const createAdmin = async (
     email: string,
     username: string,
@@ -112,55 +105,10 @@ export const createAdmin = async (
     requestingAdminRole?: 'super_admin' | 'admin',
     createdByUsername?: string
 ): Promise<{ success: boolean; error?: string }> => {
-    try {
-        // Check if requesting admin has permission
-        if (requestingAdminRole !== 'super_admin') {
-            return { success: false, error: 'Only Super Admins can create new users' };
-        }
-
-        // Step 1: Create user in Supabase Auth using admin client
-        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-            email,
-            password,
-            email_confirm: true, // Auto-confirm email
-            user_metadata: {
-                username,
-                role,
-            }
-        });
-
-        if (authError || !authData.user) {
-            console.error('Error creating auth user:', authError);
-            return { success: false, error: authError?.message || 'Failed to create user in authentication system' };
-        }
-
-        // Step 2: Create record in admin_users table
-        const passwordHash = await hashPassword(password);
-
-        const { error: dbError } = await supabase
-            .from('admin_users')
-            .insert([{
-                id: authData.user.id, // Use the same ID from Supabase Auth
-                email,
-                username,
-                password_hash: passwordHash, // Keep for backward compatibility
-                role,
-                is_active: true,
-                created_by: createdByUsername || 'system',
-            }]);
-
-        if (dbError) {
-            console.error('Error creating admin in database:', dbError);
-            // Rollback: Delete the auth user
-            await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-            return { success: false, error: 'Email or username already exists' };
-        }
-
-        return { success: true };
-    } catch (error) {
-        console.error('Create admin error:', error);
-        return { success: false, error: 'An error occurred while creating admin' };
-    }
+    return {
+        success: false,
+        error: 'Admin creation must be done through Supabase Dashboard. Please contact a system administrator.'
+    };
 };
 
 // Update admin password
@@ -289,32 +237,16 @@ export const updateAdmin = async (
     }
 };
 
-// Delete admin user (only super_admin can delete)
+// Delete admin user - DEPRECATED: Use Supabase Dashboard instead
+// Admin users should be managed manually in Supabase Dashboard
 export const deleteAdmin = async (
     adminId: string,
     requestingAdminRole?: 'super_admin' | 'admin'
 ): Promise<{ success: boolean; error?: string }> => {
-    try {
-        // Check if requesting admin has permission
-        if (requestingAdminRole !== 'super_admin') {
-            return { success: false, error: 'Only Super Admins can delete users' };
-        }
-
-        const { error } = await supabase
-            .from('admin_users')
-            .delete()
-            .eq('id', adminId);
-
-        if (error) {
-            console.error('Error deleting admin:', error);
-            return { success: false, error: 'Failed to delete admin user' };
-        }
-
-        return { success: true };
-    } catch (error) {
-        console.error('Delete admin error:', error);
-        return { success: false, error: 'An error occurred while deleting admin' };
-    }
+    return {
+        success: false,
+        error: 'Admin deletion must be done through Supabase Dashboard. Please contact a system administrator.'
+    };
 };
 
 // Send password reset email using Supabase Auth
