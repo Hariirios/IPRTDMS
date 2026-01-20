@@ -80,17 +80,26 @@ export default function Admin() {
     e.preventDefault();
     setError('');
 
-    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-    const adminUsername = import.meta.env.VITE_ADMIN_USERNAME;
-    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
-
     if (userType === 'admin') {
-      if ((email === adminEmail || email === adminUsername) && password === adminPassword) {
-        setIsAuthenticated(true);
-        setAuthenticatedUserType('admin');
-        toast.success('Welcome to IPRT Admin Dashboard!');
-      } else {
-        setError('Invalid admin credentials');
+      // Authenticate admin using Supabase
+      try {
+        const { loginAdmin } = await import('../lib/auth');
+        const adminUser = await loginAdmin(email, password);
+        
+        if (adminUser) {
+          setIsAuthenticated(true);
+          setAuthenticatedUserType('admin');
+          localStorage.setItem('currentAdminId', adminUser.id);
+          localStorage.setItem('currentAdminEmail', adminUser.email);
+          localStorage.setItem('currentAdminUsername', adminUser.username);
+          localStorage.setItem('currentAdminRole', adminUser.role);
+          toast.success(`Welcome ${adminUser.username}!`);
+        } else {
+          setError('Invalid admin credentials or account is inactive');
+        }
+      } catch (error) {
+        console.error('Admin login error:', error);
+        setError('Login failed. Please try again.');
       }
     } else {
       // Authenticate member from database

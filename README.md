@@ -59,16 +59,26 @@ The application will be available at `http://localhost:5173`
 
 ## Admin Panel
 
-Access the admin panel at `http://localhost:5173/admin` (or `http://localhost:5174/admin` if running on port 5174)
+Access the admin panel at `http://localhost:5173/admin`
 
-**Default Credentials**:
-- Email: `admin@iprt.edu` or Username: `admin`
-- Password: `admin123`
+### Authentication
 
-**Note**: Admin credentials are stored in the `.env` file and can be changed by updating:
-- `VITE_ADMIN_EMAIL`
-- `VITE_ADMIN_USERNAME`
-- `VITE_ADMIN_PASSWORD`
+Admin authentication is handled through **Supabase Authentication**:
+
+1. **Create Admin User**: Go to Supabase Dashboard > Authentication > Users
+2. **Link to Admin Table**: Run `create-first-admin.sql` in Supabase SQL Editor
+3. **Login**: Use your Supabase Auth email and password
+
+**Current Admin**:
+- Email: `abdallaahmet11@iprt.org`
+- Username: `abdalla_admin`
+- Role: `super_admin`
+
+For detailed setup instructions, see:
+- `SUPABASE_SETUP_GUIDE.md` - Complete Supabase setup
+- `create-first-admin.sql` - Create admin user
+- `verify-admin-user.sql` - Verify admin exists
+- `ADMIN_LOGIN_FIX_COMPLETE.md` - Login system documentation
 
 ### Admin Features
 
