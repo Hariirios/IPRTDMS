@@ -529,7 +529,7 @@ export default function Admin() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-start">
                   <label className="flex items-center">
                     <input
                       type="checkbox"
@@ -539,9 +539,6 @@ export default function Admin() {
                     />
                     <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">{t.login.rememberMe}</span>
                   </label>
-                  <a href="#" className="text-sm text-[#7C3AED] hover:text-[#6D28D9]">
-                    {t.login.forgotPassword}
-                  </a>
                 </div>
 
                 {error && (
