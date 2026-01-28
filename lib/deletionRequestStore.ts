@@ -158,6 +158,10 @@ export const deletionRequestStore = {
   
   approve: async (id: string, adminEmail: string, adminResponse?: string) => {
     try {
+      // First get the deletion request to know who to notify
+      const request = await deletionRequestStore.getById(id);
+      if (!request) throw new Error('Deletion request not found');
+
       const { data, error } = await supabase
         .from('deletion_requests')
         .update({
@@ -171,6 +175,16 @@ export const deletionRequestStore = {
         .single();
 
       if (error) throw error;
+
+      // Send notification to the member who requested the deletion
+      await notificationStore.add({
+        type: 'deletion_request',
+        title: 'Deletion Request Approved',
+        message: `Your request to delete student "${request.studentName}" has been approved. ${adminResponse || 'The student will be removed from the system.'}`,
+        relatedId: id,
+        createdBy: adminEmail,
+        targetUser: request.requestedByEmail // Send to the member who made the request
+      });
 
       return {
         id: data.id,
@@ -194,6 +208,10 @@ export const deletionRequestStore = {
   
   reject: async (id: string, adminEmail: string, reason: string) => {
     try {
+      // First get the deletion request to know who to notify
+      const request = await deletionRequestStore.getById(id);
+      if (!request) throw new Error('Deletion request not found');
+
       const { data, error } = await supabase
         .from('deletion_requests')
         .update({
@@ -207,6 +225,16 @@ export const deletionRequestStore = {
         .single();
 
       if (error) throw error;
+
+      // Send notification to the member who requested the deletion
+      await notificationStore.add({
+        type: 'deletion_request',
+        title: 'Deletion Request Rejected',
+        message: `Your request to delete student "${request.studentName}" has been rejected. Reason: ${reason}`,
+        relatedId: id,
+        createdBy: adminEmail,
+        targetUser: request.requestedByEmail // Send to the member who made the request
+      });
 
       return {
         id: data.id,

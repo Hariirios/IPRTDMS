@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { notificationStore } from './notificationStore';
 
 export interface Requisition {
   id: string;
@@ -132,21 +133,53 @@ class RequisitionStore {
   }
 
   async approve(id: string, reviewedBy: string, reviewNotes?: string): Promise<Requisition> {
-    return this.update(id, {
+    // First get the requisition to know who to notify
+    const requisition = await this.getById(id);
+    if (!requisition) throw new Error('Requisition not found');
+
+    const updatedRequisition = await this.update(id, {
       status: 'Approved',
       reviewed_by: reviewedBy,
       reviewed_date: new Date().toISOString().split('T')[0],
       review_notes: reviewNotes
     });
+
+    // Send notification to the member who submitted the requisition
+    await notificationStore.add({
+      type: 'requisition',
+      title: 'Requisition Approved',
+      message: `Your requisition "${requisition.title}" has been approved. ${reviewNotes || 'You can proceed with your request.'}`,
+      relatedId: id,
+      createdBy: reviewedBy,
+      targetUser: requisition.submitted_by // Send to the member who submitted
+    });
+
+    return updatedRequisition;
   }
 
   async reject(id: string, reviewedBy: string, reviewNotes: string): Promise<Requisition> {
-    return this.update(id, {
+    // First get the requisition to know who to notify
+    const requisition = await this.getById(id);
+    if (!requisition) throw new Error('Requisition not found');
+
+    const updatedRequisition = await this.update(id, {
       status: 'Rejected',
       reviewed_by: reviewedBy,
       reviewed_date: new Date().toISOString().split('T')[0],
       review_notes: reviewNotes
     });
+
+    // Send notification to the member who submitted the requisition
+    await notificationStore.add({
+      type: 'requisition',
+      title: 'Requisition Rejected',
+      message: `Your requisition "${requisition.title}" has been rejected. Reason: ${reviewNotes}`,
+      relatedId: id,
+      createdBy: reviewedBy,
+      targetUser: requisition.submitted_by // Send to the member who submitted
+    });
+
+    return updatedRequisition;
   }
 
   async setPending(id: string): Promise<Requisition> {

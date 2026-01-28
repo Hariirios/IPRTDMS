@@ -153,20 +153,15 @@ export function ServicesAdmin() {
             const { handleImageUpload: processImage } = await import('../../lib/imageUtils');
             
             // Show loading toast
-            const loadingToast = toast.loading('Processing image with ULTRA HIGH quality...');
+            const loadingToast = toast.loading('Optimizing image...');
             
-            // Process image with 100% quality - NO compression for maximum clarity
-            const compressedImage = await processImage(file, {
-                maxWidth: 2000,  // ULTRA high resolution
-                maxHeight: 2000, // ULTRA high resolution
-                quality: 1.0,    // 100% quality - NO compression!
-                outputFormat: file.type.includes('png') ? 'image/png' : 'image/jpeg'
-            });
+            // Process image with good quality
+            const compressedImage = await processImage(file);
             
             updateMentor(index, 'image', compressedImage);
             
             toast.dismiss(loadingToast);
-            toast.success('✨ ULTRA HIGH quality mentor image uploaded!');
+            toast.success('Mentor image uploaded successfully!');
         } catch (error: any) {
             toast.error(error.message || 'Failed to upload image');
             console.error('Image upload error:', error);

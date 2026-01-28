@@ -137,20 +137,15 @@ export function EventsAdmin() {
             const { handleImageUpload: processImage } = await import('../../lib/imageUtils');
             
             // Show loading toast
-            const loadingToast = toast.loading('Processing image with ULTRA HIGH quality...');
+            const loadingToast = toast.loading('Optimizing image...');
             
-            // Process image with 100% quality - NO compression for maximum clarity
-            const compressedImage = await processImage(file, {
-                maxWidth: 2400,  // ULTRA high resolution for event banners
-                maxHeight: 1800, // ULTRA high resolution for event banners
-                quality: 1.0,    // 100% quality - NO compression!
-                outputFormat: 'image/jpeg'
-            });
+            // Process image with good quality
+            const compressedImage = await processImage(file);
             
             setImagePreview(compressedImage);
             
             toast.dismiss(loadingToast);
-            toast.success('✨ ULTRA HIGH quality event image uploaded!');
+            toast.success('Event image uploaded successfully!');
         } catch (error: any) {
             toast.error(error.message || 'Failed to upload image');
             console.error('Image upload error:', error);

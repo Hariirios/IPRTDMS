@@ -178,83 +178,219 @@ export const translations = {
       darkMode: "Dark Mode",
       lightMode: "Light Mode",
       language: "Language",
+    },
+
+    // Messaging System
+    messaging: {
+      title: "Messages",
+      newMessage: "New Message",
+      sendMessage: "Send Message",
+      reply: "Reply",
+      close: "Close",
+      to: "To",
+      from: "From",
+      subject: "Subject",
+      message: "Message",
+      send: "Send",
+      cancel: "Cancel",
+      noMessages: "No messages yet",
+      loading: "Loading messages...",
+      messageSent: "Message sent successfully!",
+      messageError: "Failed to send message",
+      selectRecipient: "Select recipient",
+      typeMessage: "Type your message...",
+      admin: "Admin",
+      member: "Member",
+      allMembers: "All Members",
+      markAsRead: "Mark as read",
+      unread: "Unread",
+      read: "Read"
+    },
+
+    // Login
+    login: {
+      adminPortal: "Admin Portal",
+      memberPortal: "Member Portal",
+      systemAdmin: "System administration and management",
+      emailAddress: "Email Address",
+      password: "Password",
+      rememberMe: "Remember me",
+      forgotPassword: "Forgot password?",
+      loginAsAdmin: "Login as Admin",
+      loginAsMember: "Login as Member",
+      admin: "Admin",
+      member: "Member"
+    },
+
+    // Admin Dashboard
+    admin: {
+      dashboard: {
+        title: "IPRT Admin Dashboard",
+        subtitle: "Institute for Practical Research & Training",
+        welcome: "Welcome to IPRT Dashboard",
+        description: "Manage your institute's operations efficiently",
+        totalStudents: "Total Students",
+        activeProjects: "Active Projects",
+        attendanceRate: "Attendance Rate",
+        pendingRequisitions: "Pending Requisitions",
+        enrolled: "enrolled",
+        ongoing: "ongoing",
+        excellent: "Excellent",
+        good: "Good",
+        needsImprovement: "Needs improvement",
+        needsReview: "Needs review",
+        allReviewed: "All reviewed",
+        recentActivity: "Recent Activity",
+        quickActions: "Quick Actions",
+        addStudent: "Add Student",
+        newProject: "New Project",
+        viewAttendance: "View Attendance",
+        reviewRequisitions: "Review Requisitions",
+        dataLoaded: "Dashboard data loaded successfully"
+      },
+      tabs: {
+        dashboard: "Dashboard",
+        projects: "Projects",
+        students: "Students",
+        members: "Members",
+        attendance: "Attendance",
+        requisitions: "Requisitions",
+        deletions: "Deletion Requests",
+        team: "Team Members"
+      },
+      common: {
+        logout: "Logout",
+        loading: "Loading...",
+        save: "Save",
+        cancel: "Cancel",
+        delete: "Delete",
+        edit: "Edit",
+        add: "Add",
+        search: "Search",
+        filter: "Filter",
+        export: "Export",
+        import: "Import",
+        refresh: "Refresh",
+        close: "Close",
+        confirm: "Confirm",
+        yes: "Yes",
+        no: "No",
+        success: "Success",
+        error: "Error",
+        warning: "Warning",
+        info: "Information"
+      }
+    },
+
+    // Member Dashboard
+    member: {
+      dashboard: {
+        title: "IPRT Member Dashboard",
+        subtitle: "Institute for Practical Research & Training",
+        welcome: "Welcome back",
+        description: "Manage your assigned projects and track student progress",
+        myProjects: "My Projects",
+        studentsManaged: "Students Managed",
+        attendanceRecords: "Attendance Records",
+        myRequisitions: "My Requisitions",
+        active: "Active",
+        total: "Total",
+        thisWeek: "This week",
+        pending: "Pending"
+      },
+      quickActions: {
+        takeAttendance: "Take Attendance",
+        viewProjects: "View Projects",
+        newRequisition: "New Requisition"
+      },
+      tabs: {
+        dashboard: "Dashboard",
+        projects: "My Projects",
+        students: "Students",
+        attendance: "Attendance",
+        requisitions: "Requisitions",
+        profile: "Profile"
+      },
+      common: {
+        logout: "Logout"
+      }
     }
   },
 
   so: {
-    // Navigation - Somali
+    // Navigation - Somali (Enhanced)
     nav: {
-      home: "Hoyga",
-      about: "Naga",
+      home: "Bogga Hore",
+      about: "Ku Saabsan",
       missionVision: "Hadafka & Aragtida",
       staff: "Shaqaalaha",
-      facilitators: "Macallimiinta",
+      facilitators: "Tababarayaasha",
       technicians: "Farsamoyaqaanada",
       events: "Dhacdooyinka",
-      services: "Adeegyada",
+      services: "Adeegyadayada",
       videos: "Muuqaallo",
       testimonials: "Marag-furyo",
       partners: "Lammaanayaasheena",
       sponsors: "Maalgeliyayaasha",
-      booking: "Ballan-qaad",
+      booking: "Diiwaangelin",
       contact: "Nala Soo Xiriir",
     },
 
-    // Home Page - Somali
+    // Home Page - Somali (Enhanced)
     home: {
-      heroTitle: "Wada waan korayaa, wada waan barwaaqaynayaa.",
-      heroSubtitle: "Horumarin caafimaad maskaxeed, adkaansho, iyo koris qof kasta u ah.",
-      exploreServices: "Baadh Adeegyada",
-      bookSession: "Ballan Qaado",
-      introTitle: "Soo dhawoow Sirta Maanka",
-      introText: "Sirta Maanka waxaan ku dadaalayaa in aan kor u qaadno caafimaadka maskaxeed iyo adkaanshaha bulshadeena iyada oo aan adeegsanaynno waxbarasho, tababar, kooxo taageero, iyo barnaamijyo koritaan shakhsi.",
-      supportIcon: "Taageero",
-      coachingIcon: "Tababar",
-      empowermentIcon: "Awoodsiinta",
-      ctaTitle: "Nagu soo biir ololahakor u qaadista wacyiga caafimaadka maskaxeed.",
-      ctaButton: "Bilow Maanta",
-      aboutTitle: "Ku Saabsan Sirta Maanka",
-      aboutDescription: "Waxaan nahay xarun caafimaad bulsheed oo maskaxeed oo u heellan kor u qaadista fayoobida shaqsi iyo bulshaba iyada oo la adeegsanayo daryeel naxariis leh, hago xirfad leh, iyo barnaamijyo wada-noolaansho.",
-      seeMore: "Arag Wax Dheeraad ah Naga",
-      upcomingEvents: "Dhacdooyinka Soo Socda",
-      viewMoreEvents: "Arag Dhacdooyin Dheeraad ah",
+      heroTitle: "Machadka Cilmi-baadhista Ficil-falka ah & Tababarka",
+      heroSubtitle: "Awoodsiinta iyada oo loo marayo Waxbarasho Ficil-fal ah & Cilmi-baadh",
+      exploreServices: "Eeg Barnaamijyada Tababarka",
+      bookSession: "Hadda Isdiiwaangeli",
+      introTitle: "Ku Soo Dhawoow IPRT",
+      introText: "IPRT waxaan bixinaa barnaamijyo tababar oo gacanta lagu taaban karo iyo xalal cilmi-baadh oo hal-abuur leh oo u qalabeeya shakhsiyaadka iyo ururada xirfado ficil-fal ah oo loogu talagalay guusha dhabta ah.",
+      supportIcon: "Tababar",
+      coachingIcon: "Cilmi-baadh",
+      empowermentIcon: "Hal-abuur",
+      ctaTitle: "Nagu soo biir hadafkeenna waxbarasho ficil-fal ah iyo sarreynta cilmi-baadhista.",
+      ctaButton: "Maanta Bilow",
+      aboutTitle: "Ku Saabsan IPRT",
+      aboutDescription: "Waxaan nahay machadka waxbarasho oo u heellan bixinta barnaamijyo tababar oo gacanta lagu taaban karo iyo xalal cilmi-baadh oo hal-abuur leh oo ka dhexeeya fikradaha iyo ficil-falka.",
+      seeMore: "Wax Dheeraad ah Naga Baro",
+      upcomingEvents: "Barnaamijyada Soo Socda",
+      viewMoreEvents: "Dhamaan Barnaamijyada Arag",
       ourServices: "Adeegyadayada",
-      exploreAllServices: "Baadh Dhammaan Adeegyada",
-      whatClientsSay: "Waxa Macaamiisheenna Sheegaan",
-      bookNowSection: "Diyaar ma u tahay inaad bilowdo Safarka Caafimaadkaaga?",
-      bookNowText: "Qaad tallaabada ugu horeysa ee caafimaadka maskaxeed ee ka fiican. Hadda ballan-qaad kulamo xirfadayaasheenna waayo-aragnimo leh.",
-      bookNow: "Hadda Ballan-qaad",
+      exploreAllServices: "Dhammaan Adeegyada Baadh",
+      whatClientsSay: "Waxa Macaamiisheenna Yiraahdaan",
+      bookNowSection: "Ma diyaar u tahay inaad bilowdo Safarka Barashada?",
+      bookNowText: "Qaad tallaabada ugu horeysa ee horumarinta xirfadaha ficil-falka ah. Maanta ku diiwaangeli barnaamijyadayada tababarka ee tababarayaasha waayo-aragnimada leh.",
+      bookNow: "Hadda Diiwaangeli",
     },
 
-    // About Page - Somali
+    // About Page - Somali (Enhanced)
     about: {
-      title: "Naga",
-      description: "Sirta Maanka waa xarun caafimaad bulsheed oo maskaxeed oo u heellan kor u qaadista fayoobida shaqsi iyo bulshaba. Waxaan bixinaa meelo ammaan ah oo loogu talagalay bogsasho, waxbarasho, iyo awoodsiinta.",
+      title: "Ku Saabsan",
+      description: "IPRT waa machadka waxbarasho oo u heellan bixinta barnaamijyo tababar oo gacanta lagu taaban karo iyo xalal cilmi-baadh oo hal-abuur leh. Waxaan ku xidhnaa meesha u dhaxaysa fikradaha iyo ficil-falka iyada oo loo marayo tababar dhamaystiran iyo cilmi-baadh la dabaqo.",
       missionTitle: "Hadafkeenna",
-      mission: "In aan kor u qaadno wacyiga qaab-nololeedka shakhsiyaadka iyada oo la adeegsanayo tababar iyo waxbarasho xirfadaha nololeed ee muhiimka ah.",
+      mission: "In aan bixinno cilmi-baadh hal-abuur leh iyo barnaamijyo tababar oo dhamaystiran oo awoodsiiya shakhsiyaadka iyo ururada xirfadaha iyo aqoonta loo baahan yahay horumarinta waarta iyo saameynta dhabta ah.",
       visionTitle: "Aragtideenna",
-      vision: "In aan abuurno bulsho naxariis badan oo ay ku jirto wada-noolaansho halkaas oo caafimaadka maskaxeed mudnaanta la siiyo, cay iyo cudur-daar la tirtiro, iyo shakhsiyaad barwaaqo.",
+      vision: "In aan noqonno machadka ugu horreeya cilmi-baadhista ficil-falka ah iyo tababarka, oo caalami ahaan loo aqoonsado beddelka bulshada iyada oo loo marayo waxbarasho hal-abuur leh iyo cilmi-baadh xalliya caqabadaha dhabta ah.",
       valuesTitle: "Qiyamka Asaasiga ah",
       values: [
         {
-          title: "Awoodsiinta",
-          description: "Waxaan rumaysnahay in aan awoodsiiyo shaqsiyaadka inay gacanta ku hayaan safarka caafimaadkooda maskaxeed."
+          title: "Sarreynta",
+          description: "Waxaan u heellan nahay heerka ugu sarreeya ee tayada dhammaan barnaamijyadayada tababarka iyo hawlaha cilmi-baadhista."
         },
         {
-          title: "Daacadnimo iyo Dhaqan-wanaag",
-          description: "Waxaan ilaalinaa heerkii ugu sarreeyay ee daacadnimada xirfadeed iyo dhaqan-wanaagga."
+          title: "Hal-abuurka",
+          description: "Waxaan soo dhawaynaa fikrado cusub, tignoolajiyado, iyo habab si aan ugu horumarno waxbarashada ficil-falka ah."
         },
         {
-          title: "Naxariis iyo Dareenka",
-          description: "Waxaan u dhawaanahaa qof kasta oo ay ka muuqato daryeel, faham, iyo ixtiraam run ah."
+          title: "Daacadnimada",
+          description: "Waxaan ilaalinaa dhaqamada akhlaaqiga ah iyo hufnaanta dhammaan hawlahayaga iyo xiriirkeenna."
         },
         {
-          title: "Wada-shaqayn",
-          description: "Waxaan ka wada shaqaynaa bulshada, ururada, iyo shaqsiyaadka si aan u horumariño caafimaad."
+          title: "Saameynta",
+          description: "Waxaan diiradda saarnaa abuurista isbeddel macno leh oo bulshada ku dhex jira iyada oo loo marayo xirfado ficil-fal ah iyo cilmi-baadh la dabaqo."
         },
         {
-          title: "Hagaajin Joogto ah",
-          description: "Waxaan u heellan nahay barashada socota iyo hagaajinta adeegyadayada."
+          title: "Wada-shaqaynta",
+          description: "Waxaan ka wada shaqaynaa lammaanayaasha warshadaha, ururada, iyo bulshada si aan u bixinno tababar khuseeya."
         }
       ]
     },
@@ -360,6 +496,142 @@ export const translations = {
       darkMode: "Qaabka Mugdiga",
       lightMode: "Qaabka Ifka",
       language: "Luqadda",
+    },
+
+    // Messaging System - Somali (Enhanced)
+    messaging: {
+      title: "Farriimaha",
+      newMessage: "Farriin Cusub",
+      sendMessage: "Dir Farriin",
+      reply: "Jawaab",
+      close: "Xir",
+      to: "U dir",
+      from: "Ka yimid",
+      subject: "Mawduuca",
+      message: "Farriinta",
+      send: "Dir",
+      cancel: "Jooji",
+      noMessages: "Weli ma jiraan farriimo",
+      loading: "Farriimaha soo dejinaya...",
+      messageSent: "Farriinta si guul leh ayaa loo diray!",
+      messageError: "Farriinta lama diri karin",
+      selectRecipient: "Dooro qofka aad u dirayso",
+      typeMessage: "Qor farriintaada...",
+      admin: "Maamule",
+      member: "Xubun",
+      allMembers: "Dhammaan Xubnaha",
+      markAsRead: "Calaamadee inay la akhriyay",
+      unread: "Aan la akhriyin",
+      read: "La akhriyay"
+    },
+
+    // Login - Somali
+    login: {
+      adminPortal: "Maamulka Portal",
+      memberPortal: "Xubnaha Portal",
+      systemAdmin: "Maamulka nidaamka iyo maaraynta",
+      emailAddress: "Cinwaanka Email-ka",
+      password: "Furaha sirta ah",
+      rememberMe: "I xasuuso",
+      forgotPassword: "Ma ilowday furaha sirta ah?",
+      loginAsAdmin: "U gal Maamule ahaan",
+      loginAsMember: "U gal Xubun ahaan",
+      admin: "Maamule",
+      member: "Xubun"
+    },
+
+    // Admin Dashboard - Somali (Enhanced)
+    admin: {
+      dashboard: {
+        title: "IPRT Maamulka Dashboard",
+        subtitle: "Machadka Cilmi-baadhista Ficil-falka ah & Tababarka",
+        welcome: "Ku Soo Dhawoow IPRT Dashboard",
+        description: "Si hufan u maamul hawlaha machadkaaga",
+        totalStudents: "Wadarta Ardayda",
+        activeProjects: "Mashaariicdayda Firfircoon",
+        attendanceRate: "Heerka Soo-gaadhista",
+        pendingRequisitions: "Codsiyada Sugaya",
+        enrolled: "diiwaan-gashan",
+        ongoing: "socda",
+        excellent: "Aad u fiican",
+        good: "Fiican",
+        needsImprovement: "U baahan hagaajin",
+        needsReview: "U baahan dib-u-eegis",
+        allReviewed: "Dhammaantood la eegay",
+        recentActivity: "Dhaqdhaqaaqa Dhawaan",
+        quickActions: "Ficillada Degdegga ah",
+        addStudent: "Ku dar Arday",
+        newProject: "Mashruuc Cusub",
+        viewAttendance: "Arag Soo-gaadhista",
+        reviewRequisitions: "Dib-u-eeg Codsiyada",
+        dataLoaded: "Xogta dashboard-ka si guul leh ayaa loo soo dejiyay"
+      },
+      tabs: {
+        dashboard: "Dashboard",
+        projects: "Mashaariicdayda",
+        students: "Ardayda",
+        members: "Xubnaha",
+        attendance: "Soo-gaadhista",
+        requisitions: "Codsiyada",
+        deletions: "Codsiyada Tirtirka",
+        team: "Kooxda Shaqaalaha"
+      },
+      common: {
+        logout: "Ka bax",
+        loading: "Soo dejinaya...",
+        save: "Kaydi",
+        cancel: "Jooji",
+        delete: "Tirtir",
+        edit: "Wax ka beddel",
+        add: "Ku dar",
+        search: "Raadi",
+        filter: "Kala saar",
+        export: "Soo saari",
+        import: "Soo geli",
+        refresh: "Cusboonaysii",
+        close: "Xir",
+        confirm: "Xaqiiji",
+        yes: "Haa",
+        no: "Maya",
+        success: "Guul",
+        error: "Khalad",
+        warning: "Digniin",
+        info: "Macluumaad"
+      }
+    },
+
+    // Member Dashboard - Somali (Enhanced)
+    member: {
+      dashboard: {
+        title: "IPRT Xubnaha Dashboard",
+        subtitle: "Machadka Cilmi-baadhista Ficil-falka ah & Tababarka",
+        welcome: "Ku Soo Dhawoow",
+        description: "Maamul mashaariicdaada la kuu qoondeeyay oo la socod horumarinta ardayda",
+        myProjects: "Mashaariicdayda",
+        studentsManaged: "Ardayda la Maamulay",
+        attendanceRecords: "Diiwaannada Soo-gaadhista",
+        myRequisitions: "Codsiyadeeyda",
+        active: "Firfircoon",
+        total: "Wadarta",
+        thisWeek: "Usbuucan",
+        pending: "Sugaya"
+      },
+      quickActions: {
+        takeAttendance: "Qaad Soo-gaadhista",
+        viewProjects: "Arag Mashaariicdayda",
+        newRequisition: "Codsi Cusub"
+      },
+      tabs: {
+        dashboard: "Dashboard",
+        projects: "Mashaariicdayda",
+        students: "Ardayda",
+        attendance: "Soo-gaadhista",
+        requisitions: "Codsiyada",
+        profile: "Astaanta"
+      },
+      common: {
+        logout: "Ka bax"
+      }
     }
   },
 
@@ -542,6 +814,142 @@ export const translations = {
       darkMode: "الوضع الداكن",
       lightMode: "الوضع الفاتح",
       language: "اللغة",
+    },
+
+    // Messaging System - Arabic
+    messaging: {
+      title: "الرسائل",
+      newMessage: "رسالة جديدة",
+      sendMessage: "إرسال رسالة",
+      reply: "رد",
+      close: "إغلاق",
+      to: "إلى",
+      from: "من",
+      subject: "الموضوع",
+      message: "الرسالة",
+      send: "إرسال",
+      cancel: "إلغاء",
+      noMessages: "لا توجد رسائل بعد",
+      loading: "جاري تحميل الرسائل...",
+      messageSent: "تم إرسال الرسالة بنجاح!",
+      messageError: "فشل في إرسال الرسالة",
+      selectRecipient: "اختر المستلم",
+      typeMessage: "اكتب رسالتك...",
+      admin: "مدير",
+      member: "عضو",
+      allMembers: "جميع الأعضاء",
+      markAsRead: "تحديد كمقروءة",
+      unread: "غير مقروءة",
+      read: "مقروءة"
+    },
+
+    // Login - Arabic
+    login: {
+      adminPortal: "بوابة الإدارة",
+      memberPortal: "بوابة الأعضاء",
+      systemAdmin: "إدارة النظام والتشغيل",
+      emailAddress: "عنوان البريد الإلكتروني",
+      password: "كلمة المرور",
+      rememberMe: "تذكرني",
+      forgotPassword: "نسيت كلمة المرور؟",
+      loginAsAdmin: "تسجيل الدخول كمدير",
+      loginAsMember: "تسجيل الدخول كعضو",
+      admin: "مدير",
+      member: "عضو"
+    },
+
+    // Admin Dashboard - Arabic
+    admin: {
+      dashboard: {
+        title: "لوحة تحكم إدارة IPRT",
+        subtitle: "معهد البحوث العملية والتدريب",
+        welcome: "مرحباً بك في لوحة تحكم IPRT",
+        description: "إدارة عمليات معهدك بكفاءة",
+        totalStudents: "إجمالي الطلاب",
+        activeProjects: "المشاريع النشطة",
+        attendanceRate: "معدل الحضور",
+        pendingRequisitions: "الطلبات المعلقة",
+        enrolled: "مسجل",
+        ongoing: "جاري",
+        excellent: "ممتاز",
+        good: "جيد",
+        needsImprovement: "يحتاج تحسين",
+        needsReview: "يحتاج مراجعة",
+        allReviewed: "تمت مراجعة الكل",
+        recentActivity: "النشاط الأخير",
+        quickActions: "الإجراءات السريعة",
+        addStudent: "إضافة طالب",
+        newProject: "مشروع جديد",
+        viewAttendance: "عرض الحضور",
+        reviewRequisitions: "مراجعة الطلبات",
+        dataLoaded: "تم تحميل بيانات لوحة التحكم بنجاح"
+      },
+      tabs: {
+        dashboard: "لوحة التحكم",
+        projects: "المشاريع",
+        students: "الطلاب",
+        members: "الأعضاء",
+        attendance: "الحضور",
+        requisitions: "الطلبات",
+        deletions: "طلبات الحذف",
+        team: "أعضاء الفريق"
+      },
+      common: {
+        logout: "تسجيل الخروج",
+        loading: "جاري التحميل...",
+        save: "حفظ",
+        cancel: "إلغاء",
+        delete: "حذف",
+        edit: "تعديل",
+        add: "إضافة",
+        search: "بحث",
+        filter: "تصفية",
+        export: "تصدير",
+        import: "استيراد",
+        refresh: "تحديث",
+        close: "إغلاق",
+        confirm: "تأكيد",
+        yes: "نعم",
+        no: "لا",
+        success: "نجح",
+        error: "خطأ",
+        warning: "تحذير",
+        info: "معلومات"
+      }
+    },
+
+    // Member Dashboard - Arabic
+    member: {
+      dashboard: {
+        title: "لوحة تحكم الأعضاء IPRT",
+        subtitle: "معهد البحوث العملية والتدريب",
+        welcome: "مرحباً بعودتك",
+        description: "إدارة مشاريعك المخصصة وتتبع تقدم الطلاب",
+        myProjects: "مشاريعي",
+        studentsManaged: "الطلاب المُدارون",
+        attendanceRecords: "سجلات الحضور",
+        myRequisitions: "طلباتي",
+        active: "نشط",
+        total: "المجموع",
+        thisWeek: "هذا الأسبوع",
+        pending: "معلق"
+      },
+      quickActions: {
+        takeAttendance: "أخذ الحضور",
+        viewProjects: "عرض المشاريع",
+        newRequisition: "طلب جديد"
+      },
+      tabs: {
+        dashboard: "لوحة التحكم",
+        projects: "مشاريعي",
+        students: "الطلاب",
+        attendance: "الحضور",
+        requisitions: "الطلبات",
+        profile: "الملف الشخصي"
+      },
+      common: {
+        logout: "تسجيل الخروج"
+      }
     }
   }
 };

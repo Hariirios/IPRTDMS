@@ -46,7 +46,8 @@ export function StudentsAdmin() {
     phone: '',
     enrollmentDate: '',
     status: 'Active' as 'Active' | 'Completed' | 'Dropped',
-    projectId: ''
+    projectId: '',
+    selectedProjects: [] as string[] // For managing multiple project assignments
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,6 +61,7 @@ export function StudentsAdmin() {
     
     try {
       if (editingStudent) {
+        // Update student basic info
         await studentStore.update(editingStudent.id, {
           fullName: formData.fullName,
           email: formData.email,
@@ -67,6 +69,28 @@ export function StudentsAdmin() {
           enrollmentDate: formData.enrollmentDate,
           status: formData.status
         });
+
+        // Handle project assignments for existing student
+        const currentProjectIds = editingStudent.projects.map(p => p.projectId);
+        const newProjectIds = formData.selectedProjects;
+
+        // Remove projects that are no longer selected
+        for (const projectId of currentProjectIds) {
+          if (!newProjectIds.includes(projectId)) {
+            await studentStore.removeProjectFromStudent(editingStudent.id, projectId);
+          }
+        }
+
+        // Add new projects that were selected
+        for (const projectId of newProjectIds) {
+          if (!currentProjectIds.includes(projectId)) {
+            const project = projects.find(p => p.id === projectId);
+            if (project) {
+              await studentStore.addProjectToStudent(editingStudent.id, projectId, project.name);
+            }
+          }
+        }
+
         toast.success('Student updated successfully!');
       } else {
         // Add new student
@@ -109,7 +133,9 @@ export function StudentsAdmin() {
       email: student.email,
       phone: student.phone,
       enrollmentDate: student.enrollmentDate,
-      status: student.status
+      status: student.status,
+      projectId: '',
+      selectedProjects: student.projects.map(p => p.projectId) // Load current project assignments
     });
     setIsModalOpen(true);
   };
@@ -144,7 +170,15 @@ export function StudentsAdmin() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingStudent(null);
-    setFormData({ fullName: '', email: '', phone: '', enrollmentDate: '', status: 'Active', projectId: '' });
+    setFormData({ 
+      fullName: '', 
+      email: '', 
+      phone: '', 
+      enrollmentDate: '', 
+      status: 'Active', 
+      projectId: '', 
+      selectedProjects: [] 
+    });
   };
 
   const filteredStudents = students.filter(student => {
@@ -438,6 +472,49 @@ export function StudentsAdmin() {
                   </select>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Student will be assigned to this project
+                  </p>
+                </div>
+              )}
+
+              {editingStudent && (
+                <div>
+                  <Label>Project Assignments</Label>
+                  <div className="mt-2 space-y-2 max-h-40 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3">
+                    {projects.length === 0 ? (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">No projects available</p>
+                    ) : (
+                      projects.map(project => (
+                        <label key={project.id} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.selectedProjects.includes(project.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({
+                                  ...formData,
+                                  selectedProjects: [...formData.selectedProjects, project.id]
+                                });
+                              } else {
+                                setFormData({
+                                  ...formData,
+                                  selectedProjects: formData.selectedProjects.filter(id => id !== project.id)
+                                });
+                              }
+                            }}
+                            className="w-4 h-4 text-[#3B0764] border-gray-300 rounded focus:ring-[#3B0764]"
+                          />
+                          <span className="text-sm text-gray-900 dark:text-white">
+                            {project.name}
+                            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                              ({project.status})
+                            </span>
+                          </span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Select projects to assign this student to. Changes will be saved when you update the student.
                   </p>
                 </div>
               )}

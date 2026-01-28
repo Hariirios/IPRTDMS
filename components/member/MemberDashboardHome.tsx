@@ -1,43 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Users, FolderKanban, ClipboardCheck, FileText, TrendingUp, AlertCircle, UserPlus } from 'lucide-react';
+import { Users, FolderKanban, ClipboardCheck, FileText, TrendingUp, AlertCircle } from 'lucide-react';
 import { memberStore } from '../../lib/memberStore';
 import { projectStore } from '../../lib/projectStore';
 import { studentStore } from '../../lib/studentStore';
+import { MessageButton } from '../messaging/MessageButton';
+import { useLanguage } from '../../contexts/LanguageContext';
 
-export function MemberDashboardHome() {
+interface MemberDashboardHomeProps {
+  onTabChange?: (tab: string) => void;
+}
+
+export function MemberDashboardHome({ onTabChange }: MemberDashboardHomeProps) {
+  const { t } = useLanguage();
   const [stats, setStats] = useState([
     {
-      title: 'My Projects',
+      title: t.member.dashboard.myProjects,
       value: '0',
       icon: FolderKanban,
       gradient: 'from-purple-600 to-pink-600',
-      change: 'Active'
+      change: t.member.dashboard.active
     },
     {
-      title: 'Students Managed',
+      title: t.member.dashboard.studentsManaged,
       value: '0',
       icon: Users,
       gradient: 'from-blue-600 to-cyan-600',
-      change: 'Total'
+      change: t.member.dashboard.total
     },
     {
-      title: 'Attendance Records',
+      title: t.member.dashboard.attendanceRecords,
       value: '0',
       icon: ClipboardCheck,
       gradient: 'from-green-600 to-teal-600',
-      change: 'This week'
+      change: t.member.dashboard.thisWeek
     },
     {
-      title: 'My Requisitions',
+      title: t.member.dashboard.myRequisitions,
       value: '0',
       icon: FileText,
       gradient: 'from-orange-600 to-red-600',
-      change: 'Pending'
+      change: t.member.dashboard.pending
     }
   ]);
 
   const [memberName, setMemberName] = useState('Member');
+  const [currentMemberId, setCurrentMemberId] = useState('');
 
   useEffect(() => {
     loadStats();
@@ -45,12 +53,14 @@ export function MemberDashboardHome() {
 
   const loadStats = async () => {
     try {
-      const currentMemberId = localStorage.getItem('currentMemberId');
+      const memberId = localStorage.getItem('currentMemberId');
       
-      if (!currentMemberId) return;
+      if (!memberId) return;
+
+      setCurrentMemberId(memberId);
 
       // Get member info
-      const member = await memberStore.getById(currentMemberId);
+      const member = await memberStore.getById(memberId);
       if (member) {
         setMemberName(member.name);
         
@@ -71,32 +81,32 @@ export function MemberDashboardHome() {
 
         setStats([
           {
-            title: 'My Projects',
+            title: t.member.dashboard.myProjects,
             value: projectCount.toString(),
             icon: FolderKanban,
             gradient: 'from-purple-600 to-pink-600',
-            change: `${activeProjects} Active`
+            change: `${activeProjects} ${t.member.dashboard.active}`
           },
           {
-            title: 'Students Managed',
+            title: t.member.dashboard.studentsManaged,
             value: studentsInProjects.toString(),
             icon: Users,
             gradient: 'from-blue-600 to-cyan-600',
-            change: 'Total'
+            change: t.member.dashboard.total
           },
           {
-            title: 'Attendance Records',
+            title: t.member.dashboard.attendanceRecords,
             value: '0',
             icon: ClipboardCheck,
             gradient: 'from-green-600 to-teal-600',
-            change: 'This week'
+            change: t.member.dashboard.thisWeek
           },
           {
-            title: 'My Requisitions',
+            title: t.member.dashboard.myRequisitions,
             value: '0',
             icon: FileText,
             gradient: 'from-orange-600 to-red-600',
-            change: 'Pending'
+            change: t.member.dashboard.pending
           }
         ]);
       }
@@ -117,8 +127,8 @@ export function MemberDashboardHome() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-r from-[#3B0764] to-[#8B5CF6] rounded-xl p-6 text-white"
       >
-        <h2 className="text-2xl font-bold mb-2">Welcome back, {memberName}!</h2>
-        <p className="text-white/90">Manage your assigned projects and track student progress</p>
+        <h2 className="text-2xl font-bold mb-2">{t.member.dashboard.welcome}, {memberName}!</h2>
+        <p className="text-white/90">{t.member.dashboard.description}</p>
       </motion.div>
 
       {/* Stats Grid */}
@@ -182,22 +192,27 @@ export function MemberDashboardHome() {
           className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg"
         >
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <button className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-              <UserPlus className="h-6 w-6 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-900 dark:text-white">Add Student</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <button 
+              onClick={() => onTabChange?.('attendance')}
+              className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors group"
+            >
+              <ClipboardCheck className="h-6 w-6 text-green-600 dark:text-green-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+              <p className="text-sm text-gray-900 dark:text-white">{t.member.quickActions?.takeAttendance || 'Take Attendance'}</p>
             </button>
-            <button className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
-              <ClipboardCheck className="h-6 w-6 text-green-600 dark:text-green-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-900 dark:text-white">Take Attendance</p>
+            <button 
+              onClick={() => onTabChange?.('projects')}
+              className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors group"
+            >
+              <FolderKanban className="h-6 w-6 text-purple-600 dark:text-purple-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+              <p className="text-sm text-gray-900 dark:text-white">{t.member.quickActions?.viewProjects || 'View Projects'}</p>
             </button>
-            <button className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors">
-              <FolderKanban className="h-6 w-6 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-900 dark:text-white">View Projects</p>
-            </button>
-            <button className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
-              <FileText className="h-6 w-6 text-orange-600 dark:text-orange-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-900 dark:text-white">New Requisition</p>
+            <button 
+              onClick={() => onTabChange?.('requisitions')}
+              className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors group"
+            >
+              <FileText className="h-6 w-6 text-orange-600 dark:text-orange-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+              <p className="text-sm text-gray-900 dark:text-white">{t.member.quickActions?.newRequisition || 'New Requisition'}</p>
             </button>
           </div>
         </motion.div>
@@ -223,7 +238,7 @@ export function MemberDashboardHome() {
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
-                Add students to your projects from the Students tab
+                View and manage students in your assigned projects
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
@@ -237,6 +252,15 @@ export function MemberDashboardHome() {
           </div>
         </div>
       </motion.div>
+
+      {/* Message Button */}
+      {currentMemberId && (
+        <MessageButton 
+          userId={currentMemberId} 
+          userType="member" 
+          userName={memberName} 
+        />
+      )}
     </div>
   );
 }

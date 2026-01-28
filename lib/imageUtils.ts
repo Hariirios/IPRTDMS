@@ -1,6 +1,6 @@
 /**
- * Image utility functions for high-quality image processing
- * Compresses images while maintaining clarity and quality
+ * Image utility functions for optimized image processing
+ * Compresses images while maintaining good quality
  */
 
 export interface ImageCompressionOptions {
@@ -11,8 +11,7 @@ export interface ImageCompressionOptions {
 }
 
 /**
- * Compress and optimize an image file while maintaining MAXIMUM clarity
- * Uses advanced canvas techniques for crystal-clear results
+ * Compress and optimize an image file
  * @param file - The image file to compress
  * @param options - Compression options
  * @returns Promise<string> - Base64 encoded image
@@ -22,9 +21,9 @@ export const compressImage = async (
   options: ImageCompressionOptions = {}
 ): Promise<string> => {
   const {
-    maxWidth = 2000,  // ULTRA high resolution
-    maxHeight = 2000, // ULTRA high resolution
-    quality = 1.0,    // 100% quality - NO compression!
+    maxWidth = 800,   // Reasonable resolution
+    maxHeight = 800,  // Reasonable resolution
+    quality = 0.85,   // Good quality with compression
     outputFormat = 'image/jpeg'
   } = options;
 
@@ -53,7 +52,7 @@ export const compressImage = async (
           }
         }
 
-        // Create canvas at FULL resolution - NO downscaling
+        // Create canvas with optimized settings
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
@@ -69,8 +68,9 @@ export const compressImage = async (
           return;
         }
 
-        // DISABLE smoothing for maximum sharpness
-        ctx.imageSmoothingEnabled = false;
+        // Enable smoothing for better quality
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         // Fill background for JPEG (prevents transparency issues)
         if (outputFormat === 'image/jpeg') {
@@ -78,10 +78,10 @@ export const compressImage = async (
           ctx.fillRect(0, 0, width, height);
         }
 
-        // Draw image at FULL quality - NO smoothing
+        // Draw image with good quality
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Convert to base64 with 100% quality - NO compression
+        // Convert to base64 with specified quality
         const compressedBase64 = canvas.toDataURL(outputFormat, quality);
 
         resolve(compressedBase64);
@@ -136,28 +136,27 @@ export const validateImageFile = (
 
 /**
  * Get optimal compression settings based on image type
- * ULTRA HIGH QUALITY - Maximum possible clarity
  * @param fileType - The MIME type of the image
  * @returns Optimal compression options
  */
 export const getOptimalCompressionSettings = (
   fileType: string
 ): ImageCompressionOptions => {
-  // For profile pictures and team members - ULTRA HIGH quality
+  // For PNG images with transparency
   if (fileType.includes('png')) {
     return {
-      maxWidth: 2000,  // MUCH higher resolution for maximum clarity
-      maxHeight: 2000, // MUCH higher resolution for maximum clarity
-      quality: 1.0,    // 100% quality - NO compression!
+      maxWidth: 600,
+      maxHeight: 600,
+      quality: 0.9,
       outputFormat: 'image/png'
     };
   }
 
-  // For photos and general images - ULTRA HIGH quality
+  // For photos and general images
   return {
-    maxWidth: 2000,  // MUCH higher resolution for maximum clarity
-    maxHeight: 2000, // MUCH higher resolution for maximum clarity
-    quality: 1.0,    // 100% quality - NO compression!
+    maxWidth: 800,
+    maxHeight: 800,
+    quality: 0.85,
     outputFormat: 'image/jpeg'
   };
 };

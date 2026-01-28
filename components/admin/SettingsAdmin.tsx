@@ -9,6 +9,7 @@ import { AdminUser, updateAdminPassword, createAdmin, getAllAdmins, deleteAdmin,
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { canCreateUsers, canDeleteUsers } from '../../lib/permissions';
+import { EmailJSTest } from '../EmailJSTest';
 
 interface SettingsAdminProps {
     currentAdmin: AdminUser | null;
@@ -876,6 +877,39 @@ export function SettingsAdmin({ currentAdmin }: SettingsAdminProps) {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* EmailJS Configuration Test - Only for Super Admins */}
+            {currentAdmin?.role === 'super_admin' && (
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-[#8B5CF6]/30 dark:border-[#3B0764]/30 p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#3B0764] to-[#3B0764] rounded-full flex items-center justify-center">
+                            <Mail className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-semibold text-[#3B0764] dark:text-[#8B5CF6]">EmailJS Configuration</h2>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Test external registration email system</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                        <div className="flex items-start gap-3">
+                            <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                            <div>
+                                <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-1">EmailJS Integration</h3>
+                                <p className="text-sm text-blue-800 dark:text-blue-300 mb-2">
+                                    This system sends registration emails from external users (seminars, workshops, program applications) 
+                                    directly to <strong>iprt.hrg@gmail.com</strong> using EmailJS service.
+                                </p>
+                                <p className="text-xs text-blue-700 dark:text-blue-400">
+                                    Use the test buttons below to verify the email configuration is working properly.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <EmailJSTest />
+                </div>
+            )}
         </div>
     );
 }

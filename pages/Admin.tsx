@@ -18,6 +18,7 @@ import { MemberAttendance } from '../components/member/MemberAttendance';
 import { MemberStudents } from '../components/member/MemberStudents';
 import { MemberDashboardHome } from '../components/member/MemberDashboardHome';
 import { MemberProfile } from '../components/member/MemberProfile';
+import { MemberNotificationBell } from '../components/member/MemberNotificationBell';
 import { Lock, Eye, EyeOff, LogOut, Moon, Sun, Globe } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -27,6 +28,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Admin() {
+  const { t } = useLanguage();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,6 +37,7 @@ export default function Admin() {
   const [userType, setUserType] = useState<'admin' | 'member'>('admin');
   const [authenticatedUserType, setAuthenticatedUserType] = useState<'admin' | 'member'>('admin');
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeMemberTab, setActiveMemberTab] = useState('dashboard');
   const [pendingDeletionsCount, setPendingDeletionsCount] = useState(0);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
@@ -93,7 +96,7 @@ export default function Admin() {
           localStorage.setItem('currentAdminEmail', adminUser.email);
           localStorage.setItem('currentAdminUsername', adminUser.username);
           localStorage.setItem('currentAdminRole', adminUser.role);
-          toast.success(`Welcome ${adminUser.username}!`);
+          toast.success('Welcome Admin!');
         } else {
           setError('Invalid admin credentials or account is inactive');
         }
@@ -444,7 +447,7 @@ export default function Admin() {
                 }`}
               >
                 <Lock className="h-4 w-4 inline mr-2" />
-                Admin
+                {t.login.admin}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -459,7 +462,7 @@ export default function Admin() {
                 <svg className="h-4 w-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Member
+                {t.login.member}
               </motion.button>
             </motion.div>
 
@@ -477,14 +480,14 @@ export default function Admin() {
                 className="text-center mb-6"
               >
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {userType === 'admin' ? 'Admin Portal' : 'Member Portal'}
+                  {userType === 'admin' ? t.login.adminPortal : t.login.memberPortal}
                 </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">System administration and management</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t.login.systemAdmin}</p>
               </motion.div>
 
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <Label htmlFor="email" className="text-gray-700 dark:text-gray-300 text-sm">Email Address</Label>
+                  <Label htmlFor="email" className="text-gray-700 dark:text-gray-300 text-sm">{t.login.emailAddress}</Label>
                   <div className="relative mt-1">
                     <Input
                       id="email"
@@ -502,7 +505,7 @@ export default function Admin() {
                 </div>
 
                 <div>
-                  <Label htmlFor="password" className="text-gray-700 dark:text-gray-300 text-sm">Password</Label>
+                  <Label htmlFor="password" className="text-gray-700 dark:text-gray-300 text-sm">{t.login.password}</Label>
                   <div className="relative mt-1">
                     <Input
                       id="password"
@@ -534,10 +537,10 @@ export default function Admin() {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="w-4 h-4 text-[#7C3AED] border-gray-300 rounded focus:ring-[#7C3AED]"
                     />
-                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Remember me</span>
+                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">{t.login.rememberMe}</span>
                   </label>
                   <a href="#" className="text-sm text-[#7C3AED] hover:text-[#6D28D9]">
-                    Forgot password?
+                    {t.login.forgotPassword}
                   </a>
                 </div>
 
@@ -549,7 +552,7 @@ export default function Admin() {
 
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button type="submit" className="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white py-3 text-base font-semibold rounded-xl">
-                    → Login as {userType === 'admin' ? 'Admin' : 'Member'}
+                    → {userType === 'admin' ? t.login.loginAsAdmin : t.login.loginAsMember}
                   </Button>
                 </motion.div>
               </form>
@@ -570,8 +573,8 @@ export default function Admin() {
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">IPRT Admin Dashboard</h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Institute for Practical Research & Training</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t.admin.dashboard.title}</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t.admin.dashboard.subtitle}</p>
               </div>
               <div className="flex items-center gap-3">
                 <NotificationBell 
@@ -630,7 +633,7 @@ export default function Admin() {
 
                 <Button onClick={handleLogout} variant="outline">
                   <LogOut className="h-4 w-4 mr-2" />
-                  Logout
+                  {t.admin.common.logout}
                 </Button>
               </div>
             </div>
@@ -641,25 +644,25 @@ export default function Admin() {
         <div className="container mx-auto px-4 py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-white dark:bg-gray-800 p-1 rounded-lg shadow">
-              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-              <TabsTrigger value="projects">Projects</TabsTrigger>
-              <TabsTrigger value="students">Students</TabsTrigger>
-              <TabsTrigger value="members">Members</TabsTrigger>
-              <TabsTrigger value="attendance">Attendance</TabsTrigger>
-              <TabsTrigger value="requisitions">Requisitions</TabsTrigger>
+              <TabsTrigger value="dashboard">{t.admin.tabs.dashboard}</TabsTrigger>
+              <TabsTrigger value="projects">{t.admin.tabs.projects}</TabsTrigger>
+              <TabsTrigger value="students">{t.admin.tabs.students}</TabsTrigger>
+              <TabsTrigger value="members">{t.admin.tabs.members}</TabsTrigger>
+              <TabsTrigger value="attendance">{t.admin.tabs.attendance}</TabsTrigger>
+              <TabsTrigger value="requisitions">{t.admin.tabs.requisitions}</TabsTrigger>
               <TabsTrigger value="deletions" className="relative">
-                Deletion Requests
+                {t.admin.tabs.deletions}
                 {pendingDeletionsCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                     {pendingDeletionsCount}
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="team">Team Members</TabsTrigger>
+              <TabsTrigger value="team">{t.admin.tabs.team}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
-              <DashboardHome />
+              <DashboardHome onTabChange={setActiveTab} />
             </TabsContent>
 
             <TabsContent value="projects">
@@ -706,16 +709,12 @@ export default function Admin() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">IPRT Member Dashboard</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Institute for Practical Research & Training</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t.member.dashboard.title}</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t.member.dashboard.subtitle}</p>
             </div>
             <div className="flex items-center gap-3">
               {/* Notification Bell for Members */}
-              <NotificationBell 
-                userRole="member" 
-                userEmail={localStorage.getItem('currentMemberEmail') || 'member@iprt.edu'}
-                onNotificationClick={handleNotificationClick} 
-              />
+              <MemberNotificationBell />
               
               {/* Language Selector */}
               <div className="relative">
@@ -767,7 +766,7 @@ export default function Admin() {
 
               <Button onClick={handleLogout} variant="outline">
                 <LogOut className="h-4 w-4 mr-2" />
-                Logout
+                {t.member.common.logout}
               </Button>
             </div>
           </div>
@@ -776,18 +775,18 @@ export default function Admin() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="dashboard" className="space-y-6">
+        <Tabs value={activeMemberTab} onValueChange={setActiveMemberTab} className="space-y-6">
           <TabsList className="bg-white dark:bg-gray-800 p-1 rounded-lg shadow">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="projects">My Projects</TabsTrigger>
-            <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="requisitions">Requisitions</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="dashboard">{t.member.tabs.dashboard}</TabsTrigger>
+            <TabsTrigger value="projects">{t.member.tabs.projects}</TabsTrigger>
+            <TabsTrigger value="students">{t.member.tabs.students}</TabsTrigger>
+            <TabsTrigger value="attendance">{t.member.tabs.attendance}</TabsTrigger>
+            <TabsTrigger value="requisitions">{t.member.tabs.requisitions}</TabsTrigger>
+            <TabsTrigger value="profile">{t.member.tabs.profile}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
-            <MemberDashboardHome />
+            <MemberDashboardHome onTabChange={setActiveMemberTab} />
           </TabsContent>
 
           <TabsContent value="projects">

@@ -42,6 +42,15 @@ export function Navbar() {
     { path: '/', label: 'Home' },
     { path: '/services', label: 'Services' },
     {
+      label: 'News',
+      dropdown: [
+        { path: '/seminars', label: 'Seminars' },
+        { path: '/workshops', label: 'Workshops' },
+        { path: '/graduates', label: 'Graduates' },
+        { path: '/new-intakes', label: 'New Intakes' },
+      ]
+    },
+    {
       label: 'Our Story',
       dropdown: [
         { path: '/about', label: 'About' },
