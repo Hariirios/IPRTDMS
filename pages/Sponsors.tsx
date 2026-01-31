@@ -5,58 +5,58 @@ import { ExternalLink, Handshake } from 'lucide-react';
 export default function Sponsors() {
   const sponsors = [
     {
-      name: "Tech Innovation Fund",
+      name: "Hormuud Telecom",
       type: "Technology Partner",
-      initials: "TIF",
+      initials: "HT",
       gradient: "from-blue-600 to-cyan-600",
       website: "#"
     },
     {
-      name: "Global Education Network",
-      type: "Education Partner",
-      initials: "GEN",
-      gradient: "from-purple-600 to-pink-600",
-      website: "#"
-    },
-    {
-      name: "Sustainable Development Org",
-      type: "Development Partner",
-      initials: "SDO",
+      name: "Dahabshiil Group",
+      type: "Financial Partner",
+      initials: "DG",
       gradient: "from-green-600 to-teal-600",
       website: "#"
     },
     {
-      name: "Research Excellence Foundation",
-      type: "Research Partner",
-      initials: "REF",
+      name: "Somali Chamber of Commerce",
+      type: "Business Partner",
+      initials: "SCC",
+      gradient: "from-purple-600 to-pink-600",
+      website: "#"
+    },
+    {
+      name: "Mogadishu University",
+      type: "Education Partner",
+      initials: "MU",
       gradient: "from-orange-600 to-red-600",
       website: "#"
     },
     {
-      name: "Industry Skills Council",
-      type: "Training Partner",
-      initials: "ISC",
+      name: "Salaam Somali Bank",
+      type: "Financial Partner",
+      initials: "SSB",
       gradient: "from-indigo-600 to-purple-600",
       website: "#"
     },
     {
-      name: "Community Development Fund",
-      type: "Community Partner",
-      initials: "CDF",
+      name: "Somali Development Fund",
+      type: "Development Partner",
+      initials: "SDF",
       gradient: "from-pink-600 to-rose-600",
       website: "#"
     },
     {
-      name: "International Research Consortium",
-      type: "Research Partner",
-      initials: "IRC",
+      name: "Golis Telecom Somalia",
+      type: "Technology Partner",
+      initials: "GTS",
       gradient: "from-cyan-600 to-blue-600",
       website: "#"
     },
     {
-      name: "Digital Learning Alliance",
-      type: "Technology Partner",
-      initials: "DLA",
+      name: "Somali Business Council",
+      type: "Industry Partner",
+      initials: "SBC",
       gradient: "from-teal-600 to-green-600",
       website: "#"
     }
@@ -85,7 +85,7 @@ export default function Sponsors() {
               Our Sponsors & Partners
             </h1>
             <p className="text-white/90 text-xl leading-relaxed">
-              We are grateful for the support of our valued partners who share our vision for practical education and research
+              We are grateful for the support of our valued Somali partners who share our vision for practical vocational education and community development
             </p>
           </motion.div>
         </div>
@@ -166,15 +166,16 @@ export default function Sponsors() {
             </h2>
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl">
               <p className="text-gray-600 dark:text-gray-400 mb-6 text-center text-lg">
-                Our partners receive:
+                Our Somali partners receive:
               </p>
               <ul className="space-y-4">
                 {[
-                  "Brand visibility across our training programs and events",
-                  "Collaboration opportunities on research projects",
-                  "Access to our network of professionals and graduates",
-                  "Joint marketing and promotional activities",
-                  "Priority access to our facilities and resources"
+                  "Brand visibility across our vocational training programs and community events",
+                  "Collaboration opportunities on skills development projects",
+                  "Access to our network of skilled graduates and professionals",
+                  "Joint community outreach and development activities",
+                  "Priority access to our training facilities and resources",
+                  "Partnership in addressing Somalia's skills development needs"
                 ].map((benefit, index) => (
                   <motion.li
                     key={index}
@@ -214,7 +215,7 @@ export default function Sponsors() {
               Become a Partner
             </h2>
             <p className="text-gray-600 dark:text-gray-400 text-lg mb-8">
-              Join us in our mission to provide practical education and research solutions. Together, we can make a greater impact.
+              Join us in our mission to provide practical vocational education and skills development for the Somali community. Together, we can build a skilled workforce.
             </p>
             <motion.a
               href="/contact"

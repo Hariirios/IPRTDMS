@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { ChevronDown } from 'lucide-react';
 
 export function FAQSection() {
+  const { t } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const faqs = [
+  const faqs = t.faq?.questions || [
     {
       question: 'What is IPRT?',
       answer: 'Institute for Practical Research & Training - an educational institution providing hands-on training and innovative research solutions.'
@@ -35,10 +37,10 @@ export function FAQSection() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Frequently Asked Questions
+            {t.faq?.title || 'Frequently Asked Questions'}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
-            Find answers to common questions about IPRT
+            {t.faq?.subtitle || 'Find answers to common questions about IPRT'}
           </p>
         </motion.div>
 

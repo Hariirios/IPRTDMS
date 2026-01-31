@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 import { Calendar, Clock, Users, BookOpen, ArrowRight, CheckCircle, Star } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { ProgramApplicationForm } from '../components/forms/ProgramApplicationForm';
@@ -34,23 +35,23 @@ const intakeData: Intake[] = [
     title: 'March 2024 Intake',
     startDate: '2024-03-15',
     applicationDeadline: '2024-03-01',
-    description: 'Join our comprehensive programs starting March 2024. Applications are now open with early bird discounts available.',
+    description: 'Join our comprehensive vocational programs starting March 2024. Applications are now open for our free practical skills training.',
     programs: [
       {
         id: '1',
-        title: 'Full Stack Web Development',
-        description: 'Master modern web development with React, Node.js, and cloud technologies. Build real-world applications and deploy them to production.',
+        title: 'Professional Cooking & Culinary Arts',
+        description: 'Master culinary techniques, food safety, menu planning, and restaurant operations. Learn from experienced chefs and gain hands-on kitchen experience.',
         duration: '6 months',
-        level: 'Intermediate',
-        category: 'Technology',
+        level: 'Beginner',
+        category: 'Culinary',
         startDate: '2024-03-15',
         applicationDeadline: '2024-03-01',
-        price: '$800',
+        price: 'Free',
         features: [
-          'React & Node.js Development',
-          'Database Design & Management',
-          'Cloud Deployment (AWS/Azure)',
-          'Real-world Project Portfolio',
+          'Basic to Advanced Cooking Techniques',
+          'Food Safety & Hygiene Standards',
+          'Menu Planning & Cost Control',
+          'Kitchen Management',
           'Job Placement Assistance'
         ],
         image: '/BG-1.png',
@@ -58,57 +59,57 @@ const intakeData: Intake[] = [
       },
       {
         id: '2',
-        title: 'Cybersecurity Fundamentals',
-        description: 'Learn essential cybersecurity skills including network security, ethical hacking, and security analysis.',
+        title: 'Professional Barbering & Hair Styling',
+        description: 'Learn professional barbering techniques, hair cutting, styling, and salon management. Includes modern and traditional barbering methods.',
         duration: '4 months',
         level: 'Beginner',
-        category: 'Technology',
+        category: 'Beauty',
         startDate: '2024-03-15',
         applicationDeadline: '2024-03-01',
-        price: '$600',
+        price: 'Free',
         features: [
-          'Network Security Basics',
-          'Ethical Hacking Techniques',
-          'Security Risk Assessment',
-          'Industry Certifications Prep',
-          'Hands-on Lab Experience'
+          'Hair Cutting & Styling Techniques',
+          'Beard Trimming & Shaving',
+          'Customer Service Skills',
+          'Salon Equipment Operation',
+          'Business Setup Guidance'
         ],
         image: '/BG-2.png'
       },
       {
         id: '3',
-        title: 'Digital Marketing & E-commerce',
-        description: 'Comprehensive digital marketing program covering SEO, social media, content marketing, and e-commerce strategies.',
-        duration: '3 months',
-        level: 'Beginner',
-        category: 'Business',
+        title: 'Automotive Mechanics & Repair',
+        description: 'Comprehensive automotive training covering engine repair, electrical systems, diagnostics, and maintenance procedures.',
+        duration: '8 months',
+        level: 'Intermediate',
+        category: 'Technical',
         startDate: '2024-03-15',
         applicationDeadline: '2024-03-01',
-        price: '$450',
+        price: 'Free',
         features: [
-          'SEO & Content Marketing',
-          'Social Media Strategy',
-          'Google Ads & Analytics',
-          'E-commerce Platform Setup',
-          'Campaign Management'
+          'Engine Repair & Maintenance',
+          'Electrical System Diagnostics',
+          'Brake & Suspension Systems',
+          'Modern Diagnostic Tools',
+          'Workshop Safety Procedures'
         ]
       },
       {
         id: '4',
-        title: 'UI/UX Design Professional',
-        description: 'Learn user interface and user experience design principles with hands-on projects using industry-standard tools.',
-        duration: '4 months',
-        level: 'Intermediate',
-        category: 'Design',
+        title: 'Fashion Design & Tailoring',
+        description: 'Learn professional tailoring, pattern making, garment construction, and fashion design principles for both traditional and modern clothing.',
+        duration: '5 months',
+        level: 'Beginner',
+        category: 'Fashion',
         startDate: '2024-03-15',
         applicationDeadline: '2024-03-01',
-        price: '$550',
+        price: 'Free',
         features: [
-          'Design Thinking Process',
-          'Figma & Adobe Creative Suite',
-          'User Research & Testing',
-          'Responsive Design Principles',
-          'Portfolio Development'
+          'Pattern Making & Design',
+          'Sewing Machine Operation',
+          'Garment Construction',
+          'Fabric Selection & Care',
+          'Business & Marketing Skills'
         ],
         image: '/BG-3.png'
       }
@@ -119,43 +120,43 @@ const intakeData: Intake[] = [
     title: 'June 2024 Intake',
     startDate: '2024-06-15',
     applicationDeadline: '2024-06-01',
-    description: 'Upcoming intake for June 2024 with new programs and enhanced curriculum.',
+    description: 'Upcoming intake for June 2024 with additional vocational programs. All programs are offered free of charge.',
     programs: [
       {
         id: '5',
-        title: 'Data Science & Analytics',
-        description: 'Comprehensive data science program covering Python, machine learning, and data visualization.',
-        duration: '5 months',
-        level: 'Advanced',
-        category: 'Technology',
+        title: 'Electrical Installation & Wiring',
+        description: 'Learn electrical installation, wiring, safety procedures, and maintenance of electrical systems in residential and commercial buildings.',
+        duration: '6 months',
+        level: 'Intermediate',
+        category: 'Technical',
         startDate: '2024-06-15',
         applicationDeadline: '2024-06-01',
-        price: '$750',
+        price: 'Free',
         features: [
-          'Python Programming',
-          'Machine Learning Algorithms',
-          'Data Visualization',
-          'Statistical Analysis',
-          'Real-world Projects'
+          'Electrical Wiring & Installation',
+          'Safety Procedures & Codes',
+          'Circuit Design & Testing',
+          'Troubleshooting Techniques',
+          'Certification Preparation'
         ],
         image: '/BG-4.png'
       },
       {
         id: '6',
-        title: 'Project Management Professional',
-        description: 'Learn project management methodologies including Agile, Scrum, and traditional project management.',
-        duration: '3 months',
-        level: 'Intermediate',
-        category: 'Business',
+        title: 'Carpentry & Woodworking',
+        description: 'Master woodworking techniques, furniture making, construction carpentry, and tool usage for both traditional and modern projects.',
+        duration: '7 months',
+        level: 'Beginner',
+        category: 'Construction',
         startDate: '2024-06-15',
         applicationDeadline: '2024-06-01',
-        price: '$500',
+        price: 'Free',
         features: [
-          'Agile & Scrum Methodologies',
-          'Project Planning & Execution',
-          'Risk Management',
-          'Team Leadership',
-          'PMP Certification Prep'
+          'Wood Selection & Preparation',
+          'Hand & Power Tool Usage',
+          'Furniture Making Techniques',
+          'Construction Carpentry',
+          'Project Planning & Costing'
         ]
       }
     ]
@@ -190,10 +191,11 @@ export default function NewIntakes() {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Technology': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'Business': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-      case 'Design': return 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200';
-      case 'Research': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200';
+      case 'Culinary': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+      case 'Beauty': return 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200';
+      case 'Technical': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'Fashion': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'Construction': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -311,8 +313,8 @@ export default function NewIntakes() {
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                           {program.title}
                         </h3>
-                        <span className="text-2xl font-bold text-[#3B0764] dark:text-[#8B5CF6]">
-                          {program.price}
+                        <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                          Free Training
                         </span>
                       </div>
                       
@@ -351,9 +353,11 @@ export default function NewIntakes() {
                           Apply Now
                           <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
-                        <Button variant="outline" className="flex-1">
-                          Learn More
-                        </Button>
+                        <Link to="/services" className="flex-1">
+                          <Button variant="outline" className="w-full">
+                            Learn More
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   </motion.div>
@@ -452,13 +456,15 @@ export default function NewIntakes() {
               >
                 Apply Now
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white text-white hover:bg-white hover:text-[#3B0764]"
-              >
-                Download Brochure
-              </Button>
+              <Link to="/contact">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white text-white hover:bg-white hover:text-[#3B0764] w-full sm:w-auto"
+                >
+                  Download Brochure
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </div>

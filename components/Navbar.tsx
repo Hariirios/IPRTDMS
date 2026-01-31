@@ -12,7 +12,7 @@ export function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const location = useLocation();
 
   const languages = [
@@ -39,8 +39,8 @@ export function Navbar() {
   }, []);
 
   const navItems = [
-    { path: '/', label: 'Home' },
-    { path: '/services', label: 'Services' },
+    { path: '/', label: t.nav.home },
+    { path: '/services', label: t.nav.services },
     {
       label: 'News',
       dropdown: [
@@ -53,20 +53,20 @@ export function Navbar() {
     {
       label: 'Our Story',
       dropdown: [
-        { path: '/about', label: 'About' },
-        { path: '/mission-vision', label: 'Mission & Vision' },
-        { path: '/sponsors', label: 'Our Sponsors' },
+        { path: '/about', label: t.nav.about },
+        { path: '/mission-vision', label: t.nav.missionVision },
+        { path: '/sponsors', label: t.nav.sponsors },
       ]
     },
     {
       label: 'Our Team',
       dropdown: [
-        { path: '/staff', label: 'Our Staff' },
-        { path: '/facilitators', label: 'Our Facilitators' },
-        { path: '/technicians', label: 'Our Technicians' },
+        { path: '/staff', label: t.nav.staff },
+        { path: '/facilitators', label: t.nav.facilitators },
+        { path: '/technicians', label: t.nav.technicians },
       ]
     },
-    { path: '/contact', label: 'Contact Us' },
+    { path: '/contact', label: t.nav.contact },
   ];
 
   const handleDropdownClick = (e: React.MouseEvent, label: string) => {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 import { Calendar, Clock, MapPin, Users, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { SeminarRegistrationForm } from '../components/forms/SeminarRegistrationForm';
@@ -275,17 +276,32 @@ export default function Seminars() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Want to Speak at Our Seminars?
+              Stay Updated with Our Seminars
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              We're always looking for industry experts and thought leaders to share their knowledge with our community.
+              Join our educational seminars and expand your knowledge with expert insights and practical learning opportunities.
             </p>
-            <Button 
-              size="lg" 
-              className="bg-white text-[#3B0764] hover:bg-white/90"
-            >
-              Become a Speaker
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg" 
+                className="bg-white text-[#3B0764] hover:bg-white/90"
+                onClick={() => {
+                  // Scroll to the top to show all seminars
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
+                View All Seminars
+              </Button>
+              <Link to="/contact">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white text-white hover:bg-white hover:text-[#3B0764] w-full sm:w-auto"
+                >
+                  Contact Us
+                </Button>
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>

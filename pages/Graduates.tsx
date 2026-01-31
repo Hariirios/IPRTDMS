@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 import { GraduationCap, Calendar, Users, Award, Briefcase, Star } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
@@ -32,39 +33,39 @@ const graduationData: GraduationBatch[] = [
     title: 'December 2023 Graduation Ceremony',
     date: '2023-12-20',
     totalGraduates: 45,
-    programs: ['Software Development', 'Digital Marketing', 'Project Management'],
-    description: 'We are proud to celebrate the achievements of our December 2023 graduates who have successfully completed their programs and are ready to make their mark in their respective fields.',
+    programs: ['Professional Cooking', 'Automotive Mechanics', 'Fashion Design & Tailoring'],
+    description: 'We are proud to celebrate the achievements of our December 2023 graduates who have successfully completed their vocational programs and are ready to start their careers.',
     image: '/BG-3.png',
     graduates: [
       {
         id: '1',
         name: 'Ahmed Hassan Mohamed',
-        program: 'Software Development',
+        program: 'Professional Cooking',
         graduationDate: '2023-12-20',
-        currentPosition: 'Full Stack Developer',
-        company: 'TechSom Solutions',
-        achievement: 'Best Project Award',
-        testimonial: 'IPRT provided me with the practical skills I needed to excel in the tech industry.'
+        currentPosition: 'Head Chef',
+        company: 'Mogadishu Grand Hotel',
+        achievement: 'Best Culinary Skills Award',
+        testimonial: 'IPRT provided me with the practical cooking skills I needed to excel in the hospitality industry.'
       },
       {
         id: '2',
         name: 'Fatima Ali Omar',
-        program: 'Digital Marketing',
+        program: 'Fashion Design & Tailoring',
         graduationDate: '2023-12-20',
-        currentPosition: 'Marketing Manager',
-        company: 'Digital Somalia',
-        achievement: 'Outstanding Performance',
-        testimonial: 'The hands-on approach at IPRT helped me understand real-world marketing challenges.'
+        currentPosition: 'Fashion Designer',
+        company: 'Somali Fashion House',
+        achievement: 'Outstanding Creativity Award',
+        testimonial: 'The hands-on approach at IPRT helped me master both traditional and modern tailoring techniques.'
       },
       {
         id: '3',
         name: 'Mohamed Yusuf Ahmed',
-        program: 'Project Management',
+        program: 'Automotive Mechanics',
         graduationDate: '2023-12-20',
-        currentPosition: 'Project Coordinator',
-        company: 'Development Partners International',
-        achievement: 'Leadership Excellence',
-        testimonial: 'IPRT taught me not just theory, but practical project management skills.'
+        currentPosition: 'Senior Mechanic',
+        company: 'Somalia Auto Repair Center',
+        achievement: 'Technical Excellence Award',
+        testimonial: 'IPRT taught me not just theory, but practical automotive repair skills that I use every day.'
       }
     ]
   },
@@ -73,33 +74,33 @@ const graduationData: GraduationBatch[] = [
     title: 'September 2023 Graduation Ceremony',
     date: '2023-09-15',
     totalGraduates: 38,
-    programs: ['Data Analysis', 'Web Development', 'Graphic Design'],
-    description: 'Our September 2023 graduates have demonstrated exceptional dedication and skill development throughout their programs.',
+    programs: ['Professional Barbering', 'Electrical Installation', 'Carpentry & Woodworking'],
+    description: 'Our September 2023 graduates have demonstrated exceptional dedication and skill development throughout their vocational programs.',
     graduates: [
       {
         id: '4',
         name: 'Amina Hassan Ali',
-        program: 'Data Analysis',
+        program: 'Professional Barbering',
         graduationDate: '2023-09-15',
-        currentPosition: 'Data Analyst',
-        company: 'Somalia Statistics Bureau',
-        achievement: 'Research Excellence Award'
+        currentPosition: 'Master Barber',
+        company: 'Elite Barbershop',
+        achievement: 'Customer Service Excellence'
       },
       {
         id: '5',
         name: 'Omar Mohamed Hassan',
-        program: 'Web Development',
+        program: 'Electrical Installation',
         graduationDate: '2023-09-15',
-        currentPosition: 'Frontend Developer',
-        company: 'Mogadishu Tech Hub'
+        currentPosition: 'Licensed Electrician',
+        company: 'Somalia Power Solutions'
       },
       {
         id: '6',
         name: 'Khadija Ahmed Omar',
-        program: 'Graphic Design',
+        program: 'Carpentry & Woodworking',
         graduationDate: '2023-09-15',
-        currentPosition: 'Creative Designer',
-        company: 'Brand Somalia Agency'
+        currentPosition: 'Furniture Maker',
+        company: 'Handcrafted Furniture Co.'
       }
     ]
   }
@@ -108,24 +109,24 @@ const graduationData: GraduationBatch[] = [
 const successStories = [
   {
     name: 'Hassan Mohamed Ali',
-    program: 'Software Development (2023)',
-    achievement: 'Founded a successful tech startup',
-    description: 'After graduating from IPRT, Hassan founded TechSom, a software development company that now employs 15+ developers.',
-    image: '/about-1.png'
+    program: 'Professional Cooking (2023)',
+    achievement: 'Opened successful restaurant',
+    description: 'After graduating from IPRT, Hassan opened "Flavors of Somalia", a popular restaurant that now employs 12+ staff members.',
+    image: '/graduate-1.jpg'
   },
   {
     name: 'Sahra Omar Ahmed',
-    program: 'Digital Marketing (2022)',
-    achievement: 'Marketing Director at leading NGO',
-    description: 'Sahra now leads digital marketing strategies for one of Somalia\'s largest international NGOs.',
-    image: '/about-2.png'
+    program: 'Fashion Design & Tailoring (2022)',
+    achievement: 'Leading fashion designer in Mogadishu',
+    description: 'Sahra now runs her own fashion boutique and designs traditional and modern clothing for clients across Somalia.',
+    image: '/graduate-2.jpg'
   },
   {
     name: 'Abdullahi Hassan Mohamed',
-    program: 'Project Management (2022)',
-    achievement: 'Managing multi-million dollar projects',
-    description: 'Abdullahi oversees infrastructure development projects worth over $5M across East Africa.',
-    image: '/about-3.png'
+    program: 'Automotive Mechanics (2022)',
+    achievement: 'Owns successful auto repair business',
+    description: 'Abdullahi established "Expert Auto Care" which has become one of the most trusted auto repair shops in the city.',
+    image: '/graduate-3.jpg'
   }
 ];
 
@@ -397,19 +398,23 @@ export default function Graduates() {
               Start your journey with IPRT and become part of our growing community of successful graduates.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                className="bg-white text-[#3B0764] hover:bg-white/90"
-              >
-                Apply Now
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white text-white hover:bg-white hover:text-[#3B0764]"
-              >
-                Learn More
-              </Button>
+              <Link to="/new-intakes">
+                <Button 
+                  size="lg" 
+                  className="bg-white text-[#3B0764] hover:bg-white/90 w-full sm:w-auto"
+                >
+                  Apply Now
+                </Button>
+              </Link>
+              <Link to="/about">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white text-white hover:bg-white hover:text-[#3B0764] w-full sm:w-auto"
+                >
+                  Learn More
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </div>

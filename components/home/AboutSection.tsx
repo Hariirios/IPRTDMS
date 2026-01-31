@@ -11,24 +11,18 @@ export function AboutSection() {
   const features = [
     {
       icon: Heart,
-      titleEn: 'Compassionate Care',
-      titleSo: 'Daryeel Naxariis leh',
-      descEn: 'We approach every individual with empathy and understanding',
-      descSo: 'Waxaan u dhawaanahaa qof kasta oo ay ka muuqato dareen iyo faham',
+      title: t.about?.values?.[0]?.title || 'Excellence',
+      desc: t.about?.values?.[0]?.description || 'We are committed to the highest quality standards in all our training programs and research initiatives.',
     },
     {
       icon: Users,
-      titleEn: 'Community Focus',
-      titleSo: 'Diirada Bulshada',
-      descEn: 'Building stronger, more resilient communities together',
-      descSo: 'Dhisida bulshooyin adag oo adkaansho leh oo wada jira',
+      title: t.about?.values?.[4]?.title || 'Collaboration',
+      desc: t.about?.values?.[4]?.description || 'We work together with industry partners, organizations, and communities to deliver relevant training.',
     },
     {
       icon: Lightbulb,
-      titleEn: 'Expert Guidance',
-      titleSo: 'Hago Khibrad leh',
-      descEn: 'Professional support from qualified mental health experts',
-      descSo: 'Taageero xirfad leh oo ka timid khibradayaal caafimaad maskaxeed',
+      title: t.about?.values?.[1]?.title || 'Innovation',
+      desc: t.about?.values?.[1]?.description || 'We embrace new ideas, technologies, and methodologies to stay at the forefront of practical education.',
     },
   ];
 
@@ -138,10 +132,10 @@ export function AboutSection() {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-gray-900 dark:text-white mb-2">
-                      {t.nav.home === 'Home' ? feature.titleEn : feature.titleSo}
+                      {feature.title}
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {t.nav.home === 'Home' ? feature.descEn : feature.descSo}
+                      {feature.desc}
                     </p>
                   </div>
                 </div>

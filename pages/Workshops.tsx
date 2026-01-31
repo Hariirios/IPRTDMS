@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Calendar, Clock, MapPin, Users, ArrowRight, Code, Database, Palette } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Calendar, Clock, MapPin, Users, ArrowRight, ChefHat, Scissors, Shirt, Car, Zap } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { WorkshopRegistrationForm } from '../components/forms/WorkshopRegistrationForm';
 
@@ -23,76 +24,76 @@ interface Workshop {
 const workshopsData: Workshop[] = [
   {
     id: '1',
-    title: 'Advanced Web Development Bootcamp',
-    description: 'Intensive 3-day workshop covering modern web technologies including React, Node.js, and cloud deployment strategies. Perfect for developers looking to advance their skills.',
+    title: 'Basic Cooking Techniques Workshop',
+    description: 'Intensive 3-day workshop covering fundamental cooking methods, knife skills, and food preparation. Perfect for beginners wanting to start their culinary journey.',
     date: '2024-02-25',
     time: '9:00 AM - 5:00 PM',
-    location: 'Computer Lab 1',
-    instructor: 'Eng. Hassan Mohamed - Senior Full Stack Developer',
+    location: 'Culinary Training Kitchen',
+    instructor: 'Chef Amina Hassan - Professional Chef',
     duration: '3 Days',
-    level: 'Advanced',
-    category: 'Programming',
+    level: 'Beginner',
+    category: 'Culinary',
     image: '/BG-2.png',
     status: 'upcoming',
-    price: '$150'
+    price: undefined
   },
   {
     id: '2',
-    title: 'Data Analysis with Python',
-    description: 'Hands-on workshop teaching data analysis techniques using Python, pandas, and visualization libraries. Learn to extract insights from data.',
+    title: 'Hair Cutting & Styling Basics',
+    description: 'Hands-on workshop teaching basic hair cutting techniques, styling methods, and customer service skills for aspiring barbers.',
     date: '2024-03-05',
     time: '1:00 PM - 6:00 PM',
-    location: 'Computer Lab 2',
-    instructor: 'Dr. Amina Ali - Data Scientist',
+    location: 'Beauty Training Salon',
+    instructor: 'Master Barber Omar Ali - 15 Years Experience',
     duration: '2 Days',
-    level: 'Intermediate',
-    category: 'Data',
+    level: 'Beginner',
+    category: 'Beauty',
     status: 'upcoming',
-    price: '$120'
+    price: undefined
   },
   {
     id: '3',
-    title: 'UI/UX Design Fundamentals',
-    description: 'Learn the principles of user interface and user experience design. Create beautiful and functional designs using modern tools.',
+    title: 'Basic Sewing & Pattern Making',
+    description: 'Learn fundamental sewing techniques, pattern reading, and garment construction. Perfect introduction to tailoring and fashion design.',
     date: '2024-03-12',
     time: '10:00 AM - 4:00 PM',
-    location: 'Design Studio',
-    instructor: 'Fatima Omar - Senior UX Designer',
+    location: 'Fashion Design Studio',
+    instructor: 'Fatima Omar - Master Tailor',
     duration: '2 Days',
     level: 'Beginner',
-    category: 'Design',
+    category: 'Fashion',
     image: '/BG-3.png',
     status: 'upcoming',
-    price: '$100'
+    price: undefined
   },
   {
     id: '4',
-    title: 'Digital Marketing Strategies',
-    description: 'Master digital marketing techniques including social media marketing, SEO, and content creation for business growth.',
+    title: 'Basic Car Maintenance Workshop',
+    description: 'Learn essential car maintenance skills including oil changes, tire care, and basic troubleshooting for vehicle owners.',
     date: '2024-01-20',
     time: '2:00 PM - 6:00 PM',
-    location: 'Conference Room A',
-    instructor: 'Ahmed Yusuf - Marketing Expert',
+    location: 'Automotive Workshop',
+    instructor: 'Ahmed Yusuf - Certified Mechanic',
     duration: '1 Day',
     level: 'Beginner',
-    category: 'Business',
+    category: 'Automotive',
     status: 'completed',
-    price: '$80'
+    price: undefined
   },
   {
     id: '5',
-    title: 'Mobile App Development with React Native',
-    description: 'Build cross-platform mobile applications using React Native. Learn to deploy apps to both iOS and Android platforms.',
+    title: 'Basic Electrical Wiring Safety',
+    description: 'Learn safe electrical practices, basic wiring techniques, and home electrical maintenance for beginners.',
     date: '2024-01-15',
     time: '9:00 AM - 5:00 PM',
-    location: 'Computer Lab 1',
-    instructor: 'Mohamed Hassan - Mobile Developer',
-    duration: '3 Days',
+    location: 'Electrical Training Lab',
+    instructor: 'Mohamed Hassan - Licensed Electrician',
+    duration: '2 Days',
     level: 'Intermediate',
-    category: 'Programming',
+    category: 'Electrical',
     image: '/BG-4.png',
     status: 'completed',
-    price: '$180'
+    price: undefined
   }
 ];
 
@@ -128,10 +129,11 @@ export default function Workshops() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'Programming': return <Code className="h-4 w-4" />;
-      case 'Data': return <Database className="h-4 w-4" />;
-      case 'Design': return <Palette className="h-4 w-4" />;
-      case 'Business': return <Users className="h-4 w-4" />;
+      case 'Culinary': return <ChefHat className="h-4 w-4" />;
+      case 'Beauty': return <Scissors className="h-4 w-4" />;
+      case 'Fashion': return <Shirt className="h-4 w-4" />;
+      case 'Automotive': return <Car className="h-4 w-4" />;
+      case 'Electrical': return <Zap className="h-4 w-4" />;
       default: return <Users className="h-4 w-4" />;
     }
   };
@@ -152,7 +154,7 @@ export default function Workshops() {
               Workshops & Training
             </h1>
             <p className="text-xl md:text-2xl text-white/90 mb-8">
-              Hands-on learning experiences to develop practical skills and advance your career
+              Free hands-on learning experiences to develop practical skills and advance your career
             </p>
           </motion.div>
         </div>
@@ -172,7 +174,7 @@ export default function Workshops() {
                 Upcoming Workshops
               </h2>
               <p className="text-gray-600 dark:text-gray-400 text-lg">
-                Register now for these hands-on learning opportunities
+                Register now for these free hands-on learning opportunities
               </p>
             </motion.div>
 
@@ -201,13 +203,6 @@ export default function Workshops() {
                           {workshop.category}
                         </span>
                       </div>
-                      {workshop.price && (
-                        <div className="absolute top-4 right-4">
-                          <span className="px-3 py-1 rounded-full text-sm font-bold bg-green-500 text-white">
-                            {workshop.price}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   )}
                   
@@ -359,13 +354,15 @@ export default function Workshops() {
               >
                 View All Workshops
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white text-white hover:bg-white hover:text-[#3B0764]"
-              >
-                Contact Us
-              </Button>
+              <Link to="/contact">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white text-white hover:bg-white hover:text-[#3B0764] w-full sm:w-auto"
+                >
+                  Contact Us
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </div>

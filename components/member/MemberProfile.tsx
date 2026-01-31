@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { User, Mail, Phone, Camera, Save, X, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Phone, Camera, Save, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -12,13 +12,11 @@ export function MemberProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [imagePreview, setImagePreview] = useState<string>('');
-  const [showPassword, setShowPassword] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    password: '',
     image: ''
   });
 
@@ -44,7 +42,6 @@ export function MemberProfile() {
           name: memberData.name,
           email: memberData.email,
           phone: memberData.phone,
-          password: memberData.password,
           image: memberData.image || ''
         });
         setImagePreview(memberData.image || '');
@@ -95,6 +92,7 @@ export function MemberProfile() {
     try {
       await memberStore.update(member.id, {
         ...formData,
+        password: member.password, // Keep existing password
         assignedProjects: member.assignedProjects
       });
 
@@ -122,7 +120,6 @@ export function MemberProfile() {
         name: member.name,
         email: member.email,
         phone: member.phone,
-        password: member.password,
         image: member.image || ''
       });
       setImagePreview(member.image || '');
@@ -277,27 +274,13 @@ export function MemberProfile() {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="password">Password *</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  disabled={!isEditing}
-                  className="pr-10"
-                  required
-                />
-                {isEditing && (
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                )}
+            {/* Password field removed for security - only admins can change passwords */}
+            <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Password Management</p>
+                <p className="text-xs text-gray-500 dark:text-gray-500">
+                  For security reasons, password changes must be requested through your administrator
+                </p>
               </div>
             </div>
           </div>
@@ -349,12 +332,13 @@ export function MemberProfile() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4"
         >
-          <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">💡 Tips</h4>
+          <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">💡 Profile Tips</h4>
           <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
             <li>• Profile picture should be less than 2MB</li>
             <li>• Use a clear, professional photo</li>
             <li>• Make sure your email is valid for notifications</li>
             <li>• Keep your phone number updated for contact</li>
+            <li>• Password changes require administrator approval for security</li>
           </ul>
         </motion.div>
       )}

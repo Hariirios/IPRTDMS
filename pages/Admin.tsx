@@ -6,7 +6,6 @@ import { ProjectsAdmin } from '../components/admin/ProjectsAdmin';
 import { StudentsAdmin } from '../components/admin/StudentsAdmin';
 import { AttendanceAdmin } from '../components/admin/AttendanceAdmin';
 import { RequisitionsAdmin } from '../components/admin/RequisitionsAdmin';
-import { TeamMembersAdmin } from '../components/admin/TeamMembersAdmin';
 import { DeletionRequestsAdmin } from '../components/admin/DeletionRequestsAdmin';
 import { MembersAdmin } from '../components/admin/MembersAdmin';
 import { NotificationBell } from '../components/admin/NotificationBell';
@@ -155,10 +154,6 @@ export default function Admin() {
       case 'attendance':
         setActiveTab('attendance');
         toast.info('Viewing attendance');
-        break;
-      case 'team':
-        setActiveTab('team');
-        toast.info('Viewing team members');
         break;
       default:
         setActiveTab('dashboard');
@@ -655,7 +650,6 @@ export default function Admin() {
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="team">{t.admin.tabs.team}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
@@ -687,10 +681,6 @@ export default function Admin() {
                 const pending = await deletionRequestStore.getPending();
                 setPendingDeletionsCount(pending.length);
               }} />
-            </TabsContent>
-
-            <TabsContent value="team">
-              <TeamMembersAdmin />
             </TabsContent>
           </Tabs>
         </div>

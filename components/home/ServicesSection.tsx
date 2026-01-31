@@ -2,29 +2,32 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { BookOpen, Users, Network, ArrowRight } from 'lucide-react';
 
 export function ServicesSection() {
+  const { t } = useLanguage();
+
   const services = [
     {
       id: 1,
       icon: BookOpen,
-      title: 'Practical Skills Training',
-      description: 'Providing hands-on training programs that equip students with real-world skills and practical knowledge for immediate career application.',
+      title: t.services?.services?.[0]?.title || 'Training Programs',
+      description: t.services?.services?.[0]?.description || 'Comprehensive hands-on training in various fields with certified instructors and practical workshops.',
       gradient: 'from-purple-600 to-pink-600'
     },
     {
       id: 2,
       icon: Users,
-      title: 'Career Counseling & Support',
-      description: 'Professional guidance and mentorship to help students navigate career paths and make informed educational decisions.',
+      title: t.services?.services?.[2]?.title || 'Consulting Services',
+      description: t.services?.services?.[2]?.description || 'Professional consulting for organizations including organizational development and training needs assessment.',
       gradient: 'from-blue-600 to-cyan-600'
     },
     {
       id: 3,
       icon: Network,
-      title: 'Industry Awareness Programs',
-      description: 'Educational initiatives that connect students with industry trends and emerging opportunities in various sectors.',
+      title: t.services?.services?.[1]?.title || 'Research Services',
+      description: t.services?.services?.[1]?.description || 'Innovative research solutions for real-world challenges including applied research projects and data analysis.',
       gradient: 'from-green-600 to-teal-600'
     }
   ];
@@ -41,11 +44,11 @@ export function ServicesSection() {
           className="text-center mb-12"
         >
           <h2 className="text-4xl font-bold text-[#3B0764] dark:text-[#8B5CF6] mb-4">
-            Our Services
+            {t.services?.title || 'Our Services'}
           </h2>
           <div className="w-20 h-1 bg-gradient-to-r from-[#3B0764] to-[#8B5CF6] mx-auto rounded-full mb-4" />
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
-            Comprehensive training and research services tailored to your needs
+            {t.services?.subtitle || 'Comprehensive training and research services tailored to your needs'}
           </p>
         </motion.div>
 
@@ -89,7 +92,7 @@ export function ServicesSection() {
         >
           <Link to="/services">
             <Button className="bg-[#3B0764] hover:bg-[#2d0550] text-white px-8 py-6 text-lg group">
-              View All Services
+              {t.home?.exploreAllServices || 'View All Services'}
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>

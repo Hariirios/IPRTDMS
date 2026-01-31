@@ -173,6 +173,30 @@ export const translations = {
       copyright: "© 2025 IPRT. All rights reserved.",
     },
 
+    // FAQ Section
+    faq: {
+      title: "Frequently Asked Questions",
+      subtitle: "Find answers to common questions about IPRT",
+      questions: [
+        {
+          question: "What is IPRT?",
+          answer: "Institute for Practical Research & Training - an educational institution providing hands-on training and innovative research solutions."
+        },
+        {
+          question: "How do I get started?",
+          answer: "Simply sign up and follow our onboarding process to set up your projects. You can also contact us directly for personalized guidance."
+        },
+        {
+          question: "What training programs do you offer?",
+          answer: "We offer 50+ training programs across various fields including technology, research methodology, and practical skills development."
+        },
+        {
+          question: "How can I contact support?",
+          answer: "You can reach us through our Contact Us page or email us directly at support@iprt.edu"
+        }
+      ]
+    },
+
     // Common
     common: {
       darkMode: "Dark Mode",
@@ -254,8 +278,7 @@ export const translations = {
         members: "Members",
         attendance: "Attendance",
         requisitions: "Requisitions",
-        deletions: "Deletion Requests",
-        team: "Team Members"
+        deletions: "Deletion Requests"
       },
       common: {
         logout: "Logout",
@@ -484,10 +507,34 @@ export const translations = {
 
     // Footer - Somali
     footer: {
-      tagline: "Ka-hortagga Daawaynta Ka Hor",
+      tagline: "Awoodsiinta iyada oo loo marayo Waxbarasho Ficil-fal ah",
       quickLinks: "Xidhiidhada Degdegga ah",
       followUs: "Na Raac",
-      copyright: "© 2025 Sirta Maanka. Xuquuqda oo dhan way dhowran yihiin.",
+      copyright: "© 2025 IPRT. Xuquuqda oo dhan way dhowran yihiin.",
+    },
+
+    // FAQ Section - Somali
+    faq: {
+      title: "Su'aalaha Inta Badan La Weydiiyo",
+      subtitle: "Hel jawaabaha su'aalaha caadiga ah ee ku saabsan IPRT",
+      questions: [
+        {
+          question: "Waa maxay IPRT?",
+          answer: "Machadka Cilmi-baadhista Ficil-falka ah & Tababarka - machadka waxbarasho oo bixiya tababar gacanta lagu taaban karo iyo xalal cilmi-baadh oo hal-abuur leh."
+        },
+        {
+          question: "Sidee ayaan u bilaabi karaa?",
+          answer: "Si fudud u diiwaan-gal oo raac habka soo dhawaynta si aad u dejiso mashaariicdaada. Waxa kale oo aad si toos ah noogu soo xiriiri kartaa hago shakhsi ah."
+        },
+        {
+          question: "Barnaamijyo tababar ah oo noocee ah ayaad bixisaan?",
+          answer: "Waxaan bixinaa 50+ barnaamijyo tababar oo ku saabsan meelo kala duwan oo ay ku jiraan tignoolajiyada, habka cilmi-baadhista, iyo horumarinta xirfadaha ficil-falka ah."
+        },
+        {
+          question: "Sidee ayaan ula soo xiriiri karaa taageerada?",
+          answer: "Waad noogu soo xiriiri kartaa boggeenna 'Nala Soo Xiriir' ama si toos ah noogu soo dir email support@iprt.edu"
+        }
+      ]
     },
 
     // Common - Somali
@@ -571,8 +618,7 @@ export const translations = {
         members: "Xubnaha",
         attendance: "Soo-gaadhista",
         requisitions: "Codsiyada",
-        deletions: "Codsiyada Tirtirka",
-        team: "Kooxda Shaqaalaha"
+        deletions: "Codsiyada Tirtirka"
       },
       common: {
         logout: "Ka bax",
@@ -801,10 +847,34 @@ export const translations = {
 
     // Footer - Arabic
     footer: {
-      tagline: "الوقاية قبل العلاج",
+      tagline: "التمكين من خلال التعليم العملي",
       quickLinks: "روابط سريعة",
       followUs: "تابعنا",
-      copyright: "© 2025 سرتا ماانكا. جميع الحقوق محفوظة.",
+      copyright: "© 2025 IPRT. جميع الحقوق محفوظة.",
+    },
+
+    // FAQ Section - Arabic
+    faq: {
+      title: "الأسئلة الشائعة",
+      subtitle: "اعثر على إجابات للأسئلة الشائعة حول IPRT",
+      questions: [
+        {
+          question: "ما هو IPRT؟",
+          answer: "معهد البحوث العملية والتدريب - مؤسسة تعليمية تقدم التدريب العملي وحلول البحث المبتكرة."
+        },
+        {
+          question: "كيف أبدأ؟",
+          answer: "ببساطة سجل واتبع عملية الإعداد لتجهيز مشاريعك. يمكنك أيضاً التواصل معنا مباشرة للحصول على إرشادات شخصية."
+        },
+        {
+          question: "ما هي برامج التدريب التي تقدمونها؟",
+          answer: "نقدم أكثر من 50 برنامج تدريبي في مجالات مختلفة تشمل التكنولوجيا ومنهجية البحث وتطوير المهارات العملية."
+        },
+        {
+          question: "كيف يمكنني التواصل مع الدعم؟",
+          answer: "يمكنك التواصل معنا من خلال صفحة 'اتصل بنا' أو مراسلتنا مباشرة على support@iprt.edu"
+        }
+      ]
     },
 
     // Common - Arabic
@@ -888,8 +958,7 @@ export const translations = {
         members: "الأعضاء",
         attendance: "الحضور",
         requisitions: "الطلبات",
-        deletions: "طلبات الحذف",
-        team: "أعضاء الفريق"
+        deletions: "طلبات الحذف"
       },
       common: {
         logout: "تسجيل الخروج",
