@@ -199,12 +199,12 @@ netlify deploy --prod
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Copyright (c) 2025 Mowlid Haibe. All rights reserved.
+Copyright (c) 2025 IPRT. All rights reserved.
 
 ## Author & Code Owner
 
-**Main Developer**: Mowlid Haibe  
-**GitHub**: [@mawlid1431](https://github.com/mawlid1431)  
+**Main Developer**: Abdalle Ahmed Hassan
+**GitHub**: https://github.com/Hariirios 
 **Role**: Code Owner & Lead Developer
 
 ## Contact
